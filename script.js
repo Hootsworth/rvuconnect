@@ -78,6 +78,7 @@ const state = {
   allEvents: [],
   allAnnouncements: [],
   allClubs: [],
+  allSchools: [],
 };
 
 const app = document.querySelector("#app");
@@ -129,6 +130,10 @@ function activeClub() {
   };
 }
 
+function isAllowedRvuEmail(email) {
+  return typeof email === "string" && email.trim().toLowerCase().endsWith("@rvu.edu.in");
+}
+
 function render() {
   app.innerHTML = state.authed ? renderAppShell() : renderLanding();
   bindEvents();
@@ -176,6 +181,16 @@ async function syncFirebaseData() {
   state.allEvents = data.allEvents || [];
   state.allAnnouncements = data.allAnnouncements || [];
   state.allClubs = data.allClubs || [];
+  state.allSchools = data.allSchools || [];
+  if (profile.role !== "superAdmin" && data.clubAccess) {
+    state.role = "club-core";
+    state.host.clubSlug = data.clubAccess.club.id;
+    state.host.school = data.clubAccess.club.school || state.host.school;
+    state.host.roleTitle = data.clubAccess.member.role || "core";
+    state.host.name = data.clubAccess.member.name || data.clubAccess.club.name;
+    state.host.approved = true;
+    state.onboardingStep = null;
+  }
   state.dataLoaded = true;
   state.dataLoading = false;
 }
@@ -830,6 +845,7 @@ function renderClubAdmin() {
   const club = isSuperAdmin() ? activeClub() : activeClub();
   const clubEvents = events.filter((event) => event.club === club.name || event.host === club.name);
   const clubAnnouncements = announcements.filter((item) => item.clubId === club.id || item.clubId === club.slug || item.source === club.name);
+  const canManageCore = isSuperAdmin() || ["president", "owner"].includes((state.host.roleTitle || "").toLowerCase());
   return `
     <section class="admin-workspace">
       <div class="admin-summary">
@@ -866,6 +882,11 @@ function renderClubAdmin() {
         <article class="admin-card">
           <span class="section-num">Core</span>
           <h2>Core approval</h2>
+          ${canManageCore ? `<div class="project-actions" style="margin-bottom:18px">
+            <button class="btn gold" data-action="club-update-leadership" data-docid="${club.id || club.slug}">Update leadership</button>
+            <button class="btn gold" data-action="club-assign-core" data-docid="${club.id || club.slug}">Assign core role</button>
+            <button class="btn secondary" data-action="club-remove-core" data-docid="${club.id || club.slug}">Remove core role</button>
+          </div>` : ""}
           ${state.hostRequests.filter((item) => item.type === "clubCore" && item.clubId === (club.id || club.slug)).map((item) => adminRow(item.name || item.email, `${item.roleTitle || "Core"} · ${item.status}`, ["Accept", "Waitlist"])).join("") || renderEmptyState("No core requests", "Club core requests will appear here after students apply.")}
         </article>
         <article class="admin-card">
@@ -888,9 +909,11 @@ function renderSuperAdmin() {
   const tabs = [
     ["requests", "Requests", state.hostRequests.length],
     ["users", "Users", state.allUsers.length],
+    ["schools", "Schools", state.allSchools.length || schools.length],
     ["clubs", "Clubs", state.allClubs.length],
     ["events", "Events", state.allEvents.length],
     ["announcements", "Notices", state.allAnnouncements.length],
+    ["projects", "Projects", projects.length],
     ["moderation", "Flags", state.moderationFlags.length],
   ];
 
@@ -961,13 +984,42 @@ function renderSuperAdmin() {
           <div class="admin-row">
             <div>
               <strong>${c.name}</strong>
-              <span>${c.category || "General"} · ${c.school || "RVU"} · Status: ${c.status || "unknown"} · Reg: ${c.registrationOpen ? "Open" : "Closed"}</span>
+              <span>${c.category || "General"} · ${c.school || "RVU"} · President: ${c.currentPresidentEmail || "Not set"} · Advisor: ${c.facultyAdvisorName || c.facultyAdvisorEmail || "Not set"} · Founder: ${c.founderEmail || "Not set"}</span>
             </div>
             <div class="admin-row-actions">
+              <button data-action="admin-update-club-leadership" data-docid="${c.id}">Leadership</button>
+              <button data-action="admin-assign-core" data-docid="${c.id}">Assign core</button>
+              <button data-action="admin-remove-core" data-docid="${c.id}">Remove core</button>
               <button data-action="admin-delete-club" data-docid="${c.id}">Delete</button>
             </div>
           </div>
         `).join("") : renderEmptyState("No clubs", "Create a club to get started.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "schools") {
+    const schoolRows = state.allSchools.length
+      ? state.allSchools
+      : schools.map((name) => ({ id: name, name, status: "seeded", description: "Default RVU school option" }));
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">Registry</span>
+        <h2>School Management</h2>
+        <div class="project-actions" style="margin-bottom:18px">
+          <button class="btn gold" data-action="admin-create-school">Create school</button>
+        </div>
+        ${schoolRows.map((school) => `
+          <div class="admin-row">
+            <div>
+              <strong>${school.name}</strong>
+              <span>${school.shortName || "RVU"} · ${school.description || "School workspace"} · Status: ${school.status || "active"}</span>
+            </div>
+            <div class="admin-row-actions">
+              ${school.status === "seeded" ? "" : `<button data-action="admin-delete-school" data-docid="${school.id}">Delete</button>`}
+            </div>
+          </div>
+        `).join("")}
       </article>
     `;
   }
@@ -977,6 +1029,9 @@ function renderSuperAdmin() {
       <article class="admin-card wide">
         <span class="section-num">All</span>
         <h2>Event Management</h2>
+        <div class="project-actions" style="margin-bottom:18px">
+          <button class="btn gold" data-action="admin-create-event">Create event</button>
+        </div>
         ${state.allEvents.length ? state.allEvents.map((e) => `
           <div class="admin-row">
             <div>
@@ -1000,6 +1055,9 @@ function renderSuperAdmin() {
       <article class="admin-card wide">
         <span class="section-num">All</span>
         <h2>Announcement Management</h2>
+        <div class="project-actions" style="margin-bottom:18px">
+          <button class="btn gold" data-action="admin-create-announcement">Create notice</button>
+        </div>
         ${state.allAnnouncements.length ? state.allAnnouncements.map((a) => `
           <div class="admin-row">
             <div>
@@ -1014,6 +1072,29 @@ function renderSuperAdmin() {
             </div>
           </div>
         `).join("") : renderEmptyState("No announcements", "Announcements will appear here when created.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "projects") {
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">All</span>
+        <h2>Project Management</h2>
+        <div class="project-actions" style="margin-bottom:18px">
+          <button class="btn gold" data-action="admin-create-project">Create project</button>
+        </div>
+        ${projects.length ? projects.map((p) => `
+          <div class="admin-row">
+            <div>
+              <strong>${p.title}</strong>
+              <span>${(p.tags || []).join(", ") || "No tags"} · Status: ${p.status || "open"} · Owner: ${p.ownerId || "Super admin"}</span>
+            </div>
+            <div class="admin-row-actions">
+              <button data-action="admin-delete-project" data-docid="${p.id}">Delete</button>
+            </div>
+          </div>
+        `).join("") : renderEmptyState("No projects", "Create a project or wait for verified users to post.")}
       </article>
     `;
   }
@@ -1379,6 +1460,35 @@ function bindEvents() {
   });
 }
 
+async function updateClubLeadershipFromPrompt(clubId, club = {}) {
+  const currentPresidentName = window.prompt("Current president name", club.currentPresidentName || "");
+  if (currentPresidentName == null) return;
+  const currentPresidentEmail = window.prompt("Current president RVU email (@rvu.edu.in)", club.currentPresidentEmail || "");
+  if (!isAllowedRvuEmail(currentPresidentEmail)) return window.alert("Current president email must end with @rvu.edu.in.");
+  const facultyAdvisorName = window.prompt("Faculty advisor name", club.facultyAdvisorName || "");
+  if (facultyAdvisorName == null) return;
+  const facultyAdvisorEmail = window.prompt("Faculty advisor RVU email (@rvu.edu.in)", club.facultyAdvisorEmail || "");
+  if (!isAllowedRvuEmail(facultyAdvisorEmail)) return window.alert("Faculty advisor email must end with @rvu.edu.in.");
+
+  await window.RVUFirebase.updateClubLeadership(clubId, {
+    currentPresidentName,
+    currentPresidentEmail,
+    facultyAdvisorName,
+    facultyAdvisorEmail,
+  });
+  await window.RVUFirebase.assignClubCoreRole(clubId, {
+    email: currentPresidentEmail,
+    name: currentPresidentName || currentPresidentEmail,
+    role: "president",
+  });
+  await window.RVUFirebase.assignClubCoreRole(clubId, {
+    email: facultyAdvisorEmail,
+    name: facultyAdvisorName || facultyAdvisorEmail,
+    role: "facultyAdvisor",
+  });
+  await syncFirebaseData();
+}
+
 async function handleAction(action, dataset) {
   if (action === "open-login") {
     state.loginOpen = true;
@@ -1499,13 +1609,159 @@ async function handleAction(action, dataset) {
     const school = window.prompt("School") || schools[0];
     const tagline = window.prompt("Tagline") || "";
     const description = window.prompt("Description") || "";
-    await window.RVUFirebase.createClub({ name, category, school, tagline, description });
+    const founderName = window.prompt("Founder name") || "";
+    const founderEmail = window.prompt("Founder RVU email (@rvu.edu.in)");
+    if (!isAllowedRvuEmail(founderEmail)) return window.alert("Founder email must end with @rvu.edu.in.");
+    const facultyAdvisorName = window.prompt("Faculty advisor name") || "";
+    const facultyAdvisorEmail = window.prompt("Faculty advisor RVU email (@rvu.edu.in)");
+    if (!isAllowedRvuEmail(facultyAdvisorEmail)) return window.alert("Faculty advisor email must end with @rvu.edu.in.");
+    const currentPresidentName = window.prompt("Current president name") || "";
+    const currentPresidentEmail = window.prompt("Current president RVU email (@rvu.edu.in)");
+    if (!isAllowedRvuEmail(currentPresidentEmail)) return window.alert("Current president email must end with @rvu.edu.in.");
+    const joinLink = window.prompt("Join/registration link optional") || "";
+    await window.RVUFirebase.createClub({
+      name,
+      category,
+      school,
+      tagline,
+      description,
+      founderName,
+      founderEmail,
+      facultyAdvisorName,
+      facultyAdvisorEmail,
+      currentPresidentName,
+      currentPresidentEmail,
+      join: joinLink,
+      joinLink,
+    });
+    await syncFirebaseData();
+  }
+  if (action === "admin-create-school") {
+    if (!window.RVUFirebase || !isSuperAdmin()) return;
+    const name = window.prompt("School name");
+    if (!name) return;
+    const shortName = window.prompt("Short name (optional)") || "";
+    const description = window.prompt("Description") || "";
+    const leadEmail = window.prompt("Lead/admin RVU email optional (@rvu.edu.in)") || "";
+    if (leadEmail && !isAllowedRvuEmail(leadEmail)) return window.alert("Lead email must end with @rvu.edu.in.");
+    await window.RVUFirebase.createSchool({
+      name,
+      shortName,
+      description,
+      leadEmail,
+    });
+    await syncFirebaseData();
+  }
+  if (action === "admin-delete-school") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    if (!window.confirm("Delete this school record?")) return;
+    await window.RVUFirebase.deleteDocument("schools", dataset.docid);
+    await syncFirebaseData();
+  }
+  if (action === "admin-assign-core") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    const email = window.prompt("Core member RVU email (@rvu.edu.in)");
+    if (!isAllowedRvuEmail(email)) return window.alert("Core email must end with @rvu.edu.in.");
+    const name = window.prompt("Core member name") || email;
+    const role = window.prompt("Core role (e.g. designLead, eventsLead, treasurer)") || "core";
+    await window.RVUFirebase.assignClubCoreRole(dataset.docid, { email, name, role });
+    await syncFirebaseData();
+  }
+  if (action === "admin-update-club-leadership") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    const club = state.allClubs.find((item) => item.id === dataset.docid) || {};
+    await updateClubLeadershipFromPrompt(dataset.docid, club);
+  }
+  if (action === "club-update-leadership") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    const club = activeClub();
+    await updateClubLeadershipFromPrompt(dataset.docid, club);
+  }
+  if (action === "club-assign-core") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    const email = window.prompt("Core member RVU email (@rvu.edu.in)");
+    if (!isAllowedRvuEmail(email)) return window.alert("Core email must end with @rvu.edu.in.");
+    const name = window.prompt("Core member name") || email;
+    const role = window.prompt("Core role (e.g. eventsLead, designLead, treasurer)") || "core";
+    await window.RVUFirebase.assignClubCoreRole(dataset.docid, { email, name, role });
+    await syncFirebaseData();
+  }
+  if (action === "admin-remove-core") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    const email = window.prompt("Core member email to remove");
+    if (!email) return;
+    if (!window.confirm(`Remove ${email} from this club core?`)) return;
+    await window.RVUFirebase.removeClubCoreRole(dataset.docid, email);
+    await syncFirebaseData();
+  }
+  if (action === "club-remove-core") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    const email = window.prompt("Core member email to remove");
+    if (!email) return;
+    if (!window.confirm(`Remove ${email} from this club core?`)) return;
+    await window.RVUFirebase.removeClubCoreRole(dataset.docid, email);
     await syncFirebaseData();
   }
   if (action === "admin-delete-club") {
     if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
     if (!window.confirm("Delete this club? This cannot be undone.")) return;
     await window.RVUFirebase.deleteDocument("clubs", dataset.docid);
+    await syncFirebaseData();
+  }
+  if (action === "admin-create-event") {
+    if (!window.RVUFirebase || !isSuperAdmin()) return;
+    const title = window.prompt("Event title");
+    if (!title) return;
+    const description = window.prompt("Description") || "";
+    const date = window.prompt("Display date") || "";
+    const time = window.prompt("Time") || "";
+    const location = window.prompt("Location") || "";
+    const host = window.prompt("Host/source") || "RVU";
+    await window.RVUFirebase.createEvent({
+      title,
+      description,
+      date,
+      time,
+      location,
+      host,
+      type: window.prompt("Type: Club Event, Faculty Event, School Event") || "School Event",
+      hostType: "admin",
+      tags: [],
+      status: "published",
+    });
+    await syncFirebaseData();
+  }
+  if (action === "admin-create-announcement") {
+    if (!window.RVUFirebase || !isSuperAdmin()) return;
+    const title = window.prompt("Announcement title");
+    if (!title) return;
+    await window.RVUFirebase.createAnnouncement({
+      title,
+      description: window.prompt("Description") || "",
+      source: window.prompt("Source") || "RVU",
+      tag: window.prompt("Tag") || "Notice",
+      type: "Faculty",
+      sourceType: "admin",
+      time: "Just now",
+      status: "published",
+    });
+    await syncFirebaseData();
+  }
+  if (action === "admin-create-project") {
+    if (!window.RVUFirebase || !isSuperAdmin()) return;
+    const title = window.prompt("Project title");
+    if (!title) return;
+    const tags = (window.prompt("Tags comma separated") || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+    const skills = (window.prompt("Skills required comma separated") || "").split(",").map((skill) => skill.trim()).filter(Boolean);
+    await window.RVUFirebase.createProject({
+      title,
+      description: window.prompt("Description") || "",
+      tags,
+      skills,
+      expiry: window.prompt("Expiry date") || "",
+      score: 0,
+      status: "open",
+    });
     await syncFirebaseData();
   }
   if (action === "admin-unpublish-event") {
@@ -1533,6 +1789,12 @@ async function handleAction(action, dataset) {
     if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
     if (!window.confirm("Delete this announcement permanently?")) return;
     await window.RVUFirebase.deleteDocument("announcements", dataset.docid);
+    await syncFirebaseData();
+  }
+  if (action === "admin-delete-project") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    if (!window.confirm("Delete this project permanently?")) return;
+    await window.RVUFirebase.deleteDocument("projects", dataset.docid);
     await syncFirebaseData();
   }
   if (action === "toast") {

@@ -34,7 +34,7 @@ const firebaseConfig = {
   measurementId: "G-1G6Z0B4SY0",
 };
 
-const RVU_EMAIL_DOMAIN = "@rvu.edu";
+const RVU_EMAIL_DOMAIN = "@rvu.edu.in";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -48,26 +48,26 @@ function isRvuEmail(email) {
 async function requireRvuUser(user) {
   if (!user?.email || !isRvuEmail(user.email)) {
     await signOut(auth);
-    throw new Error("Only @rvu.edu accounts can use RVU Connect.");
+    throw new Error("Only @rvu.edu.in accounts can use RVU Connect.");
   }
   return user;
 }
 
 async function signInWithEmailPassword(email, password) {
-  if (!isRvuEmail(email)) throw new Error("Use your @rvu.edu email address.");
+  if (!isRvuEmail(email)) throw new Error("Use your @rvu.edu.in email address.");
   const result = await signInWithEmailAndPassword(auth, email, password);
   return requireRvuUser(result.user);
 }
 
 async function createEmailPasswordAccount(email, password) {
-  if (!isRvuEmail(email)) throw new Error("Use your @rvu.edu email address.");
+  if (!isRvuEmail(email)) throw new Error("Use your @rvu.edu.in email address.");
   const result = await createUserWithEmailAndPassword(auth, email, password);
   return requireRvuUser(result.user);
 }
 
 async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ hd: "rvu.edu", prompt: "select_account" });
+  provider.setCustomParameters({ hd: "rvu.edu.in", prompt: "select_account" });
   const result = await signInWithPopup(auth, provider);
   return requireRvuUser(result.user);
 }
@@ -124,16 +124,28 @@ async function loadCampusData({ superAdmin = false } = {}) {
     allEvents: [],
     allAnnouncements: [],
     allClubs: [],
+    allSchools: [],
+    clubAccess: null,
   };
 
+  if (auth.currentUser?.email) {
+    const email = auth.currentUser.email;
+    const memberDocs = await Promise.all(data.clubs.map(async (club) => {
+      const memberSnap = await getDoc(doc(db, "clubs", club.id, "coreMembers", email));
+      return memberSnap.exists() ? { club, member: { id: memberSnap.id, ...memberSnap.data() } } : null;
+    }));
+    data.clubAccess = memberDocs.find((entry) => entry?.member?.status === "approved") || null;
+  }
+
   if (superAdmin) {
-    const [requestsSnap, flagsSnap, usersSnap, allEventsSnap, allAnnouncementsSnap, allClubsSnap] = await Promise.all([
+    const [requestsSnap, flagsSnap, usersSnap, allEventsSnap, allAnnouncementsSnap, allClubsSnap, allSchoolsSnap] = await Promise.all([
       getDocs(collection(db, "hostRequests")),
       getDocs(collection(db, "moderationFlags")),
       getDocs(collection(db, "users")),
       getDocs(collection(db, "events")),
       getDocs(collection(db, "announcements")),
       getDocs(collection(db, "clubs")),
+      getDocs(collection(db, "schools")),
     ]);
     data.hostRequests = rows(requestsSnap);
     data.moderationFlags = rows(flagsSnap);
@@ -141,6 +153,7 @@ async function loadCampusData({ superAdmin = false } = {}) {
     data.allEvents = rows(allEventsSnap);
     data.allAnnouncements = rows(allAnnouncementsSnap);
     data.allClubs = rows(allClubsSnap);
+    data.allSchools = rows(allSchoolsSnap);
   }
 
   return data;
@@ -160,7 +173,8 @@ async function submitHostRequest(payload) {
   const ref = await addDoc(collection(db, "hostRequests"), request);
 
   if (payload.type == "clubCore" && payload.clubId) {
-    await setDoc(doc(db, "clubs", payload.clubId, "coreMembers", user.uid), {
+    await setDoc(doc(db, "clubs", payload.clubId, "coreMembers", user.email), {
+      uid: user.uid,
       email: user.email,
       name: payload.name,
       role: payload.roleTitle || "core",
@@ -204,7 +218,8 @@ async function updateHostRequestStatus(requestId, status) {
   });
 
   if (request.type == "clubCore" && request.clubId && request.uid) {
-    await updateDoc(doc(db, "clubs", request.clubId, "coreMembers", request.uid), {
+    await updateDoc(doc(db, "clubs", request.clubId, "coreMembers", request.email), {
+      uid: request.uid,
       status,
       reviewedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -260,6 +275,18 @@ async function createAnnouncement(payload) {
   return ref.id;
 }
 
+async function createProject(payload) {
+  const ref = await addDoc(collection(db, "projects"), {
+    ...payload,
+    status: payload.status || "open",
+    ownerId: auth.currentUser?.uid,
+    createdBy: auth.currentUser?.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
 /* ── Admin CRUD operations ── */
 
 async function updateUserRole(uid, role) {
@@ -270,8 +297,14 @@ async function updateUserRole(uid, role) {
 }
 
 async function createClub(payload) {
+  const founderEmail = payload.founderEmail?.trim().toLowerCase();
+  const facultyAdvisorEmail = payload.facultyAdvisorEmail?.trim().toLowerCase();
+  const currentPresidentEmail = payload.currentPresidentEmail?.trim().toLowerCase();
   const ref = await addDoc(collection(db, "clubs"), {
     ...payload,
+    founderEmail,
+    facultyAdvisorEmail,
+    currentPresidentEmail,
     status: payload.status || "approved",
     registrationOpen: payload.registrationOpen || false,
     highlights: payload.highlights || [],
@@ -279,7 +312,71 @@ async function createClub(payload) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  const foundingMembers = [
+    { email: currentPresidentEmail, name: payload.currentPresidentName || "Current President", role: "president", permanent: false },
+    { email: founderEmail, name: payload.founderName || "Founder", role: "founder", permanent: true },
+    { email: facultyAdvisorEmail, name: payload.facultyAdvisorName || "Faculty Advisor", role: "facultyAdvisor", permanent: false },
+  ].filter((member, index, list) =>
+    member.email && list.findIndex((candidate) => candidate.email === member.email) === index
+  );
+
+  await Promise.all(foundingMembers.map((member) => setDoc(doc(db, "clubs", ref.id, "coreMembers", member.email), {
+    ...member,
+    status: "approved",
+    assignedBy: auth.currentUser?.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })));
+
   return ref.id;
+}
+
+async function createSchool(payload) {
+  const ref = await addDoc(collection(db, "schools"), {
+    ...payload,
+    status: payload.status || "active",
+    createdBy: auth.currentUser?.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+async function assignClubCoreRole(clubId, { email, name, role }) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedRole = role || "core";
+  await setDoc(doc(db, "clubs", clubId, "coreMembers", normalizedEmail), {
+    email: normalizedEmail,
+    name: name || email,
+    role: normalizedRole,
+    status: "approved",
+    assignedBy: auth.currentUser?.uid,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+
+  if (normalizedRole.toLowerCase() === "president") {
+    await updateClubLeadership(clubId, {
+      currentPresidentEmail: normalizedEmail,
+      currentPresidentName: name || email,
+    });
+  }
+}
+
+async function removeClubCoreRole(clubId, email) {
+  await firestoreDeleteDoc(doc(db, "clubs", clubId, "coreMembers", email.trim().toLowerCase()));
+}
+
+async function updateClubLeadership(clubId, data) {
+  const updates = {};
+  if (data.currentPresidentName !== undefined) updates.currentPresidentName = data.currentPresidentName;
+  if (data.currentPresidentEmail !== undefined) updates.currentPresidentEmail = data.currentPresidentEmail.trim().toLowerCase();
+  if (data.facultyAdvisorName !== undefined) updates.facultyAdvisorName = data.facultyAdvisorName;
+  if (data.facultyAdvisorEmail !== undefined) updates.facultyAdvisorEmail = data.facultyAdvisorEmail.trim().toLowerCase();
+  await updateDoc(doc(db, "clubs", clubId), {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 async function updateClub(clubId, data) {
@@ -312,10 +409,13 @@ window.RVUFirebase = {
   auth,
   db,
   analytics,
+  assignClubCoreRole,
   createEmailPasswordAccount,
   createAnnouncement,
   createClub,
   createEvent,
+  createProject,
+  createSchool,
   deleteDocument,
   ensureUserProfile,
   isRvuEmail,
@@ -325,10 +425,12 @@ window.RVUFirebase = {
   submitHostRequest,
   updateAnnouncementStatus,
   updateClub,
+  updateClubLeadership,
   updateClubRegistration,
   updateEventStatus,
   updateHostRequestStatus,
   updateUserRole,
+  removeClubCoreRole,
   signInWithGoogle,
   signOut: () => signOut(auth),
 };

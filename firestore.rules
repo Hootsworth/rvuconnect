@@ -9,7 +9,7 @@ service cloud.firestore {
     function isRvuEmail() {
       return signedIn()
         && request.auth.token.email is string
-        && request.auth.token.email.matches('.*@rvu\\.edu$');
+        && request.auth.token.email.matches('.*@rvu\\.edu\\.in$');
     }
 
     function userDoc(uid) {
@@ -30,13 +30,13 @@ service cloud.firestore {
 
     function isApprovedClubCore(clubId) {
       return isRvuEmail()
-        && exists(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.uid))
-        && get(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.uid)).data.status == 'approved';
+        && exists(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.token.email))
+        && get(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.token.email)).data.status == 'approved';
     }
 
     function isClubPresident(clubId) {
       return isApprovedClubCore(clubId)
-        && get(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.uid)).data.role in ['president', 'owner'];
+        && get(/databases/$(database)/documents/clubs/$(clubId)/coreMembers/$(request.auth.token.email)).data.role in ['president', 'owner'];
     }
 
     function isApprovedSchoolRep(schoolId) {
@@ -94,16 +94,46 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['description', 'doing', 'highlights', 'joinLink', 'registrationOpen', 'updatedAt']);
 
-      match /coreMembers/{uid} {
-        allow read: if isSuperAdmin() || createsOwnDoc(uid) || isApprovedClubCore(clubId);
+      allow update: if isClubPresident(clubId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'description',
+            'doing',
+            'highlights',
+            'joinLink',
+            'registrationOpen',
+            'currentPresidentName',
+            'currentPresidentEmail',
+            'facultyAdvisorName',
+            'facultyAdvisorEmail',
+            'updatedAt'
+          ]);
 
-        allow create: if isRvuEmail()
-          && createsOwnDoc(uid)
-          && request.resource.data.status == 'pending'
-          && request.resource.data.email == request.auth.token.email;
+      match /coreMembers/{memberEmail} {
+        allow read: if isSuperAdmin()
+          || (isRvuEmail() && memberEmail == request.auth.token.email)
+          || isApprovedClubCore(clubId);
 
-        allow update: if isSuperAdmin() || isClubPresident(clubId);
-        allow delete: if isSuperAdmin() || isClubPresident(clubId);
+        allow create: if isSuperAdmin()
+          || (
+            isClubPresident(clubId)
+            && request.resource.data.permanent != true
+          )
+          || (
+            isRvuEmail()
+            && memberEmail == request.auth.token.email
+            && request.resource.data.status == 'pending'
+            && request.resource.data.email == request.auth.token.email
+          );
+
+        allow update: if isSuperAdmin()
+          || (
+            isClubPresident(clubId)
+            && resource.data.permanent != true
+            && request.resource.data.permanent != true
+          );
+        allow delete: if isSuperAdmin()
+          || (isClubPresident(clubId) && resource.data.permanent != true);
       }
     }
 
