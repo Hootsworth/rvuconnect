@@ -103,6 +103,7 @@ function renderAtTop() {
 function renderLanding() {
   return `
     <main class="hero">
+      <div class="hero-grid-bg" aria-hidden="true"></div>
       <div class="hero-nav">
         ${brandLockup("large")}
         <span class="hero-badge">For RV University</span>
@@ -139,6 +140,7 @@ function renderAppShell() {
           <button class="role-pill" data-action="switch-role">${state.role === "host" ? (state.host.approved ? "Host approved" : "Host pending") : state.role === "admin" ? "Super admin" : "Student"}</button>
         </div>
       </header>
+      ${renderTicker()}
       <main class="main">
         ${renderRoute()}
       </main>
@@ -148,6 +150,12 @@ function renderAppShell() {
       ${state.onboardingStep ? renderOnboarding() : ""}
     </div>
   `;
+}
+
+function renderTicker() {
+  const items = ["THIS WEEK AT RVU", "AI BUILD NIGHT", "CLUB RECRUITMENT", "PROJECT COLLABORATION", "IMPORTANT UPDATES"];
+  const ticker = [...items, ...items].map((item) => `<span>${item}</span>`).join("");
+  return `<div class="ticker" aria-hidden="true"><div>${ticker}</div></div>`;
 }
 
 function brandLockup() {
@@ -209,7 +217,7 @@ function renderHome() {
   return `
     <section class="page-head dashboard-head">
       <div>
-        <p class="eyebrow">Curated dashboard</p>
+        ${sectionLabel("01", "Curated dashboard")}
         <h1>Welcome to RVU Connect</h1>
         <p>Upcoming events, project opportunities, and priority updates arranged for action, not endless scrolling.</p>
       </div>
@@ -233,7 +241,7 @@ function renderHome() {
           </div>
         </section>
         <section class="section">
-          <div class="section-title"><h2>This Week at RVU</h2><span>Nearest date first</span></div>
+          <div class="section-title"><h2>This Week at RVU</h2><span>Soonest first</span></div>
           <div class="grid event-grid">${upcoming.map(renderEventCard).join("")}</div>
         </section>
         <section class="section">
@@ -267,7 +275,7 @@ function renderEvents() {
   const past = filtered.filter((event) => event.past);
   return `
     <section class="page-head">
-      <p class="eyebrow">Events system</p>
+      ${sectionLabel("02", "Events system")}
       <h1>Events</h1>
       <p>Centralized discovery for club, faculty, and school events. Past events stay archived instead of disappearing.</p>
     </section>
@@ -294,7 +302,7 @@ function renderClubs() {
   );
   return `
     <section class="page-head">
-      <p class="eyebrow">Approved hosts only</p>
+      ${sectionLabel("03", "Approved hosts only")}
       <h1>Clubs</h1>
       <p>A clean directory of campus groups, their focus areas, upcoming events, and join links.</p>
     </section>
@@ -311,7 +319,7 @@ function renderProjects() {
   const filtered = projects.filter((project) => state.filters.projectTag === "All" || project.tags.includes(state.filters.projectTag));
   return `
     <section class="page-head">
-      <p class="eyebrow">Student collaboration</p>
+      ${sectionLabel("04", "Student collaboration")}
       <h1>Projects</h1>
       <p>Reddit-inspired structure without heavy discussion threads: clear skill needs, status, expiry, and application flow.</p>
     </section>
@@ -327,7 +335,7 @@ function renderAnnouncements() {
   const filtered = announcements.filter((item) => state.filters.announcementType === "All" || item.type === state.filters.announcementType);
   return `
     <section class="page-head">
-      <p class="eyebrow">Structured updates</p>
+      ${sectionLabel("05", "Structured updates")}
       <h1>Announcements</h1>
       <p>Posts for recruitment, notices, registration updates, and internal information. No comments, upvotes, or social clutter.</p>
     </section>
@@ -336,6 +344,15 @@ function renderAnnouncements() {
       ${selectField("announcementTag", "Tag", ["All", "Recruitment", "Notice", "Update"], "All")}
     </div>
     <div class="updates">${filtered.map(renderAnnouncement).join("")}</div>
+  `;
+}
+
+function sectionLabel(number, label) {
+  return `
+    <div class="section-label">
+      <span class="section-num">${number}</span>
+      <span class="eyebrow">${label}</span>
+    </div>
   `;
 }
 
