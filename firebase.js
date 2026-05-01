@@ -84,14 +84,16 @@ async function rowsOrEmpty(label, promise) {
   try {
     return rows(await promise);
   } catch (error) {
-    console.warn(`RVU Connect could not load ${label}:`, error);
+    if (error?.code !== "permission-denied") {
+      console.warn(`RVU Connect could not load ${label}:`, error);
+    }
     return [];
   }
 }
 
 async function hasSuperAdminGrant(user) {
   if (!user?.uid || !user?.email) return false;
-  const email = user.email.trim().toLowerCase();
+  const email = user.email.trim();
   const [uidGrant, emailGrant] = await Promise.all([
     getDoc(doc(db, "superAdmins", user.uid)).catch(() => null),
     getDoc(doc(db, "superAdmins", email)).catch(() => null),

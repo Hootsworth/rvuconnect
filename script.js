@@ -47,6 +47,21 @@ const state = {
   selectedClubSlug: null,
   adminScope: "school",
   adminTab: "requests",
+  clubDraft: {
+    name: "",
+    category: "",
+    school: schools[0],
+    tagline: "",
+    description: "",
+    founderName: "",
+    founderEmail: "",
+    facultyAdvisorName: "",
+    facultyAdvisorEmail: "",
+    currentPresidentName: "",
+    currentPresidentEmail: "",
+    joinLink: "",
+    registrationOpen: false,
+  },
   user: {
     name: "",
     school: schools[0],
@@ -82,6 +97,24 @@ const state = {
 };
 
 const app = document.querySelector("#app");
+
+function defaultClubDraft() {
+  return {
+    name: "",
+    category: "",
+    school: schools[0],
+    tagline: "",
+    description: "",
+    founderName: "",
+    founderEmail: "",
+    facultyAdvisorName: "",
+    facultyAdvisorEmail: "",
+    currentPresidentName: "",
+    currentPresidentEmail: "",
+    joinLink: "",
+    registrationOpen: false,
+  };
+}
 
 function replaceCollection(target, values) {
   target.splice(0, target.length, ...values);
@@ -494,6 +527,7 @@ function createButton() {
 
 function renderRoute() {
   if (state.dataLoading) return renderLoadingState();
+  if (state.route === "admin-create-club") return renderCreateClubPage();
   if (state.route === "events") return renderEvents();
   if (state.route === "clubs") return renderClubs();
   if (state.route === "projects") return renderProjects();
@@ -741,9 +775,60 @@ function renderSuperAdminDashboard() {
     <section class="page-head admin-head">
       ${sectionLabel("06", "Platform authority")}
       <h1>Super Admin Dashboard</h1>
-      <p>Super admin access is granted only by the Firestore user document. From here you review representative requests, moderate content, and maintain platform registries.</p>
+      <p>Super admin access is granted by the Firestore user role or a locked superAdmins credential document. From here you review representative requests, moderate content, and maintain platform registries.</p>
     </section>
     ${renderSuperAdmin()}
+  `;
+}
+
+function renderCreateClubPage() {
+  if (!isSuperAdmin()) return renderRestrictedAdmin();
+  const draft = state.clubDraft;
+  return `
+    <section class="page-head admin-head">
+      ${sectionLabel("06A", "Club creation")}
+      <h1>Create a club</h1>
+      <p>Create the public club profile, founding record, faculty advisor, and first president in one place. The founder is preserved as a permanent core member.</p>
+      <div class="project-actions">
+        <button class="btn secondary" data-action="admin-back-to-clubs">Back to clubs</button>
+      </div>
+    </section>
+    <section class="admin-workspace">
+      <article class="admin-card wide">
+        <span class="section-num">Profile</span>
+        <h2>Club identity</h2>
+        <div class="form-grid two">
+          ${clubInputField("name", "Club name", draft.name)}
+          ${clubInputField("category", "Category", draft.category, "Tech, AI, Cultural...")}
+          ${clubSelectField("school", "School", schools, draft.school)}
+          ${clubInputField("tagline", "Small tagline", draft.tagline)}
+        </div>
+        <div class="form-grid">
+          ${clubTextArea("description", "Description", draft.description)}
+          ${clubInputField("joinLink", "Join / registration link", draft.joinLink)}
+        </div>
+      </article>
+      <article class="admin-card wide">
+        <span class="section-num">People</span>
+        <h2>Founding roles</h2>
+        <div class="form-grid two">
+          ${clubInputField("founderName", "Founder name", draft.founderName)}
+          ${clubInputField("founderEmail", "Founder RVU email", draft.founderEmail, "name@rvu.edu.in", "email")}
+          ${clubInputField("facultyAdvisorName", "Faculty advisor name", draft.facultyAdvisorName)}
+          ${clubInputField("facultyAdvisorEmail", "Faculty advisor RVU email", draft.facultyAdvisorEmail, "name@rvu.edu.in", "email")}
+          ${clubInputField("currentPresidentName", "Current president name", draft.currentPresidentName)}
+          ${clubInputField("currentPresidentEmail", "Current president RVU email", draft.currentPresidentEmail, "name@rvu.edu.in", "email")}
+        </div>
+        <label class="check-row">
+          <input type="checkbox" data-club-check="registrationOpen" ${draft.registrationOpen ? "checked" : ""} />
+          <span>Open registrations immediately</span>
+        </label>
+        <div class="project-actions">
+          <button class="btn gold" data-action="admin-submit-club">Create club</button>
+          <button class="btn secondary" data-action="admin-reset-club-form">Clear form</button>
+        </div>
+      </article>
+    </section>
   `;
 }
 
@@ -1333,6 +1418,35 @@ function inputField(name, label, value, type = "text") {
   `;
 }
 
+function clubInputField(name, label, value, placeholder = "", type = "text") {
+  return `
+    <div class="field">
+      <label>${label}</label>
+      <input data-club-input="${name}" type="${type}" value="${escapeHtml(value || "")}" placeholder="${escapeHtml(placeholder)}" />
+    </div>
+  `;
+}
+
+function clubSelectField(name, label, options, value) {
+  return `
+    <div class="field">
+      <label>${label}</label>
+      <select data-club-input="${name}">
+        ${options.map((option) => `<option ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+      </select>
+    </div>
+  `;
+}
+
+function clubTextArea(name, label, value) {
+  return `
+    <div class="field">
+      <label>${label}</label>
+      <textarea data-club-input="${name}">${escapeHtml(value || "")}</textarea>
+    </div>
+  `;
+}
+
 function unique(values) {
   return [...new Set(values)];
 }
@@ -1342,6 +1456,31 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+function validateClubDraft() {
+  const required = [
+    ["name", "Club name"],
+    ["category", "Category"],
+    ["school", "School"],
+    ["description", "Description"],
+    ["founderName", "Founder name"],
+    ["founderEmail", "Founder RVU email"],
+    ["facultyAdvisorName", "Faculty advisor name"],
+    ["facultyAdvisorEmail", "Faculty advisor RVU email"],
+    ["currentPresidentName", "Current president name"],
+    ["currentPresidentEmail", "Current president RVU email"],
+  ];
+  const missing = required.find(([key]) => !String(state.clubDraft[key] || "").trim());
+  if (missing) return `${missing[1]} is required.`;
+  const emails = [
+    ["founderEmail", "Founder email"],
+    ["facultyAdvisorEmail", "Faculty advisor email"],
+    ["currentPresidentEmail", "Current president email"],
+  ];
+  const invalid = emails.find(([key]) => !isAllowedRvuEmail(state.clubDraft[key]));
+  if (invalid) return `${invalid[1]} must end with @rvu.edu.in.`;
+  return "";
 }
 
 function bindEvents() {
@@ -1414,6 +1553,21 @@ function bindEvents() {
       if (key === "hostRoleTitle") state.host.roleTitle = field.value;
       if (key === "hostDescription") state.host.description = field.value;
       if (key === "hostJoin") state.host.joinLink = field.value;
+    });
+  });
+
+  document.querySelectorAll("[data-club-input]").forEach((field) => {
+    field.addEventListener("input", () => {
+      state.clubDraft[field.dataset.clubInput] = field.value;
+    });
+    field.addEventListener("change", () => {
+      state.clubDraft[field.dataset.clubInput] = field.value;
+    });
+  });
+
+  document.querySelectorAll("[data-club-check]").forEach((field) => {
+    field.addEventListener("change", () => {
+      state.clubDraft[field.dataset.clubCheck] = field.checked;
     });
   });
 
@@ -1602,39 +1756,49 @@ async function handleAction(action, dataset) {
     state.adminTab = dataset.tab || "requests";
   }
   if (action === "admin-create-club") {
+    if (!isSuperAdmin()) return;
+    state.clubDraft = defaultClubDraft();
+    state.route = "admin-create-club";
+    renderAtTop();
+    return;
+  }
+  if (action === "admin-back-to-clubs") {
+    state.route = "admin";
+    state.adminTab = "clubs";
+    renderAtTop();
+    return;
+  }
+  if (action === "admin-reset-club-form") {
+    state.clubDraft = defaultClubDraft();
+    render();
+    return;
+  }
+  if (action === "admin-submit-club") {
     if (!window.RVUFirebase || !isSuperAdmin()) return;
-    const name = window.prompt("Club name");
-    if (!name) return;
-    const category = window.prompt("Category (e.g. Tech, Cultural, Sports)") || "General";
-    const school = window.prompt("School") || schools[0];
-    const tagline = window.prompt("Tagline") || "";
-    const description = window.prompt("Description") || "";
-    const founderName = window.prompt("Founder name") || "";
-    const founderEmail = window.prompt("Founder RVU email (@rvu.edu.in)");
-    if (!isAllowedRvuEmail(founderEmail)) return window.alert("Founder email must end with @rvu.edu.in.");
-    const facultyAdvisorName = window.prompt("Faculty advisor name") || "";
-    const facultyAdvisorEmail = window.prompt("Faculty advisor RVU email (@rvu.edu.in)");
-    if (!isAllowedRvuEmail(facultyAdvisorEmail)) return window.alert("Faculty advisor email must end with @rvu.edu.in.");
-    const currentPresidentName = window.prompt("Current president name") || "";
-    const currentPresidentEmail = window.prompt("Current president RVU email (@rvu.edu.in)");
-    if (!isAllowedRvuEmail(currentPresidentEmail)) return window.alert("Current president email must end with @rvu.edu.in.");
-    const joinLink = window.prompt("Join/registration link optional") || "";
+    const error = validateClubDraft();
+    if (error) return window.alert(error);
+    const draft = { ...state.clubDraft };
     await window.RVUFirebase.createClub({
-      name,
-      category,
-      school,
-      tagline,
-      description,
-      founderName,
-      founderEmail,
-      facultyAdvisorName,
-      facultyAdvisorEmail,
-      currentPresidentName,
-      currentPresidentEmail,
-      join: joinLink,
-      joinLink,
+      ...draft,
+      name: draft.name.trim(),
+      category: draft.category.trim(),
+      tagline: draft.tagline.trim(),
+      description: draft.description.trim(),
+      founderName: draft.founderName.trim(),
+      founderEmail: draft.founderEmail.trim(),
+      facultyAdvisorName: draft.facultyAdvisorName.trim(),
+      facultyAdvisorEmail: draft.facultyAdvisorEmail.trim(),
+      currentPresidentName: draft.currentPresidentName.trim(),
+      currentPresidentEmail: draft.currentPresidentEmail.trim(),
+      join: draft.joinLink.trim(),
+      joinLink: draft.joinLink.trim(),
     });
+    state.clubDraft = defaultClubDraft();
+    state.route = "admin";
+    state.adminTab = "clubs";
     await syncFirebaseData();
+    renderAtTop();
+    return;
   }
   if (action === "admin-create-school") {
     if (!window.RVUFirebase || !isSuperAdmin()) return;
