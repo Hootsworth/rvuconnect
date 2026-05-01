@@ -25,7 +25,12 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return isRvuEmail() && myRole() == 'superAdmin';
+      return isRvuEmail()
+        && (
+          myRole() == 'superAdmin'
+          || exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid))
+          || exists(/databases/$(database)/documents/superAdmins/$(request.auth.token.email))
+        );
     }
 
     function isApprovedClubCore(clubId) {
@@ -67,6 +72,12 @@ service cloud.firestore {
           .hasOnly(['name', 'school', 'year', 'interests', 'onboardingComplete', 'updatedAt']);
 
       allow update, delete: if isSuperAdmin();
+    }
+
+    match /superAdmins/{adminId} {
+      allow read: if isRvuEmail()
+        && (adminId == request.auth.uid || adminId == request.auth.token.email);
+      allow write: if false;
     }
 
     match /schools/{schoolId} {

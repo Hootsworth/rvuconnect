@@ -80,22 +80,45 @@ function rows(snapshot) {
   return snapshot.docs.map((item) => ({ id: item.id, slug: item.id, ...item.data() }));
 }
 
+async function rowsOrEmpty(label, promise) {
+  try {
+    return rows(await promise);
+  } catch (error) {
+    console.warn(`RVU Connect could not load ${label}:`, error);
+    return [];
+  }
+}
+
+async function hasSuperAdminGrant(user) {
+  if (!user?.uid || !user?.email) return false;
+  const email = user.email.trim().toLowerCase();
+  const [uidGrant, emailGrant] = await Promise.all([
+    getDoc(doc(db, "superAdmins", user.uid)).catch(() => null),
+    getDoc(doc(db, "superAdmins", email)).catch(() => null),
+  ]);
+  return Boolean(uidGrant?.exists() || emailGrant?.exists());
+}
+
 async function ensureUserProfile(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
-  if (snap.exists()) return { id: snap.id, ...snap.data() };
+  const superAdmin = await hasSuperAdminGrant(user);
+  if (snap.exists()) {
+    const profile = { id: snap.id, ...snap.data() };
+    return superAdmin ? { ...profile, role: "superAdmin" } : profile;
+  }
 
   const profile = {
     email: user.email,
     name: user.displayName || user.email.split("@")[0],
     role: "student",
     interests: [],
-    onboardingComplete: false,
+    onboardingComplete: superAdmin,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
   await setDoc(ref, profile);
-  return { id: user.uid, ...profile };
+  return { id: user.uid, ...profile, role: superAdmin ? "superAdmin" : "student" };
 }
 
 async function saveUserProfile(uid, data) {
@@ -106,18 +129,18 @@ async function saveUserProfile(uid, data) {
 }
 
 async function loadCampusData({ superAdmin = false } = {}) {
-  const [clubsSnap, eventsSnap, announcementsSnap, projectsSnap] = await Promise.all([
-    getDocs(query(collection(db, "clubs"), where("status", "==", "approved"))),
-    getDocs(query(collection(db, "events"), where("status", "==", "published"))),
-    getDocs(query(collection(db, "announcements"), where("status", "==", "published"))),
-    getDocs(collection(db, "projects")),
+  const [clubsRows, eventRows, announcementRows, projectRows] = await Promise.all([
+    rowsOrEmpty("approved clubs", getDocs(query(collection(db, "clubs"), where("status", "==", "approved")))),
+    rowsOrEmpty("published events", getDocs(query(collection(db, "events"), where("status", "==", "published")))),
+    rowsOrEmpty("published announcements", getDocs(query(collection(db, "announcements"), where("status", "==", "published")))),
+    rowsOrEmpty("projects", getDocs(collection(db, "projects"))),
   ]);
 
   const data = {
-    clubs: rows(clubsSnap),
-    events: rows(eventsSnap),
-    announcements: rows(announcementsSnap),
-    projects: rows(projectsSnap),
+    clubs: clubsRows,
+    events: eventRows,
+    announcements: announcementRows,
+    projects: projectRows,
     hostRequests: [],
     moderationFlags: [],
     allUsers: [],
@@ -138,22 +161,22 @@ async function loadCampusData({ superAdmin = false } = {}) {
   }
 
   if (superAdmin) {
-    const [requestsSnap, flagsSnap, usersSnap, allEventsSnap, allAnnouncementsSnap, allClubsSnap, allSchoolsSnap] = await Promise.all([
-      getDocs(collection(db, "hostRequests")),
-      getDocs(collection(db, "moderationFlags")),
-      getDocs(collection(db, "users")),
-      getDocs(collection(db, "events")),
-      getDocs(collection(db, "announcements")),
-      getDocs(collection(db, "clubs")),
-      getDocs(collection(db, "schools")),
+    const [requestsRows, flagsRows, userRows, allEventRows, allAnnouncementRows, allClubRows, allSchoolRows] = await Promise.all([
+      rowsOrEmpty("host requests", getDocs(collection(db, "hostRequests"))),
+      rowsOrEmpty("moderation flags", getDocs(collection(db, "moderationFlags"))),
+      rowsOrEmpty("users", getDocs(collection(db, "users"))),
+      rowsOrEmpty("all events", getDocs(collection(db, "events"))),
+      rowsOrEmpty("all announcements", getDocs(collection(db, "announcements"))),
+      rowsOrEmpty("all clubs", getDocs(collection(db, "clubs"))),
+      rowsOrEmpty("all schools", getDocs(collection(db, "schools"))),
     ]);
-    data.hostRequests = rows(requestsSnap);
-    data.moderationFlags = rows(flagsSnap);
-    data.allUsers = rows(usersSnap);
-    data.allEvents = rows(allEventsSnap);
-    data.allAnnouncements = rows(allAnnouncementsSnap);
-    data.allClubs = rows(allClubsSnap);
-    data.allSchools = rows(allSchoolsSnap);
+    data.hostRequests = requestsRows;
+    data.moderationFlags = flagsRows;
+    data.allUsers = userRows;
+    data.allEvents = allEventRows;
+    data.allAnnouncements = allAnnouncementRows;
+    data.allClubs = allClubRows;
+    data.allSchools = allSchoolRows;
   }
 
   return data;
