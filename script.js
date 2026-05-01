@@ -4,6 +4,7 @@ const icons = {
   clubs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   projects: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   announce: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8A3 3 0 0 1 6 15"/></svg>',
+  admin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="M9 12l2 2 4-5"/></svg>',
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
   mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
   bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>',
@@ -23,56 +24,47 @@ const schools = [
 
 const interests = ["AI", "Web Development", "Design", "Business", "Finance", "Marketing", "Product", "Film", "Law", "Healthcare"];
 
-const events = [
-  { title: "AI Build Night", description: "A hands-on evening for shipping small AI tools with mentors from the tech club.", date: "May 6", time: "5:30 PM", sort: 6, type: "Club Event", host: "Pragya AI Club", club: "Pragya AI Club", location: "Innovation Studio", tags: ["AI", "Product"], colors: ["#233039", "#926d2f"] },
-  { title: "Design Futures Salon", description: "A compact showcase of student work, critique circles, and portfolio conversations.", date: "May 8", time: "3:00 PM", sort: 8, type: "School Event", host: "School of Design", club: "Design Circle", location: "D Block Atrium", tags: ["Design"], colors: ["#2f4d57", "#d0a863"] },
-  { title: "Founders Friday", description: "Early-stage student founders share prototypes, validation stories, and hiring needs.", date: "May 10", time: "4:00 PM", sort: 10, type: "Club Event", host: "RVU Entrepreneurship Cell", club: "E-Cell", location: "Seminar Hall 2", tags: ["Business", "Finance", "Product"], colors: ["#1f342d", "#c68d45"] },
-  { title: "Moot Court Open House", description: "Introductory session for law students interested in research, debate, and competitions.", date: "May 14", time: "11:00 AM", sort: 14, type: "Faculty Event", host: "School of Law", club: "Law Society", location: "Law Block", tags: ["Law"], colors: ["#403436", "#d0a863"] },
-  { title: "CineLab Weekend", description: "A two-day short film sprint covering concept, shoot, edit, and screening.", date: "May 18", time: "9:30 AM", sort: 18, type: "School Event", host: "Film Media School", club: "CineLab", location: "Media Lab", tags: ["Film", "Design"], colors: ["#233039", "#7b5e92"] },
-  { title: "HealthTech Roundtable", description: "Students and faculty map small healthcare problems that can become semester projects.", date: "Apr 20", time: "2:00 PM", sort: -10, type: "Faculty Event", host: "Allied Healthcare", club: "Health Forum", location: "Room 204", tags: ["Healthcare", "AI"], colors: ["#2d5b57", "#d0a863"], past: true },
-];
-
-const clubs = [
-  { name: "Pragya AI Club", category: "AI", school: "School of Computer Science and Engineering", description: "Applied AI projects, reading circles, and demo nights for curious builders.", join: "https://forms.gle/example-ai" },
-  { name: "Design Circle", category: "Design", school: "School of Design and Innovation", description: "Studio critiques, product design jams, and portfolio development.", join: "https://forms.gle/example-design" },
-  { name: "RVU E-Cell", category: "Business", school: "School of Business", description: "Founder talks, venture sprints, market research pods, and pitch practice.", join: "https://forms.gle/example-business" },
-  { name: "CineLab", category: "Cultural", school: "School of Film Media and Creative Arts", description: "Film screenings, production teams, and collaborative storytelling projects.", join: "https://forms.gle/example-film" },
-  { name: "Law Society", category: "Law", school: "School of Law", description: "Moot court preparation, policy discussions, and public-interest research.", join: "https://forms.gle/example-law" },
-  { name: "Health Forum", category: "Healthcare", school: "School of Allied Healthcare", description: "Healthcare awareness, field visits, and interdisciplinary problem discovery.", join: "https://forms.gle/example-health" },
-];
-
-const announcements = [
-  { title: "Recruitment open for Pragya AI Club", description: "Applications are open for project leads, research contributors, and event volunteers.", source: "Pragya AI Club", tag: "Recruitment", type: "Club", time: "Today" },
-  { title: "Founders Friday registrations close soon", description: "Teams planning to demo should submit their prototype note by Thursday evening.", source: "RVU E-Cell", tag: "Update", type: "Club", time: "Yesterday" },
-  { title: "Portfolio review slots released", description: "Design faculty office hours are open for second and third year students.", source: "School of Design", tag: "Notice", type: "Faculty", time: "May 1" },
-  { title: "Moot Court orientation notice", description: "The orientation room has moved from Room 109 to the Law Block reading hall.", source: "School of Law", tag: "Notice", type: "Faculty", time: "Apr 30" },
-];
-
-const projects = [
-  { title: "Campus Lost-and-Found Assistant", description: "Build a lightweight web app that logs lost items and routes verified claims to admins.", skills: ["Web Development", "Design"], tags: ["Web", "Product"], status: "Open", expiry: "May 20", score: 24 },
-  { title: "AI Notes Summarizer for Lectures", description: "Prototype an upload flow that creates structured summaries and revision cards.", skills: ["AI", "Web Development"], tags: ["AI", "Web"], status: "Open", expiry: "May 24", score: 31 },
-  { title: "Student Finance Starter Kit", description: "Create a beginner-friendly guide and calculator for budgeting across a semester.", skills: ["Finance", "Design"], tags: ["Finance", "Business"], status: "Open", expiry: "May 28", score: 18 },
-  { title: "Short Film Sound Crew", description: "Looking for sound design collaborators for a 6-minute campus short film.", skills: ["Film"], tags: ["Film"], status: "Closed", expiry: "Apr 27", score: 12 },
-];
+const events = [];
+const clubs = [];
+const announcements = [];
+const projects = [];
 
 const state = {
   route: "home",
   authed: false,
+  dataLoaded: false,
+  dataLoading: false,
+  authUser: null,
+  loginOpen: false,
+  authMode: "signin",
+  authEmail: "",
+  authPassword: "",
+  hostRequests: [],
+  moderationFlags: [],
   onboardingStep: "role",
   role: null,
   createOpen: false,
+  selectedClubSlug: null,
+  adminScope: "school",
+  adminTab: "requests",
   user: {
-    name: "Aditya",
+    name: "",
     school: schools[0],
-    year: "2",
-    interests: ["AI", "Design", "Product"],
+    year: "1",
+    interests: [],
   },
   host: {
-    type: "Club",
-    name: "RVU Product Guild",
-    category: "Product",
-    description: "A campus group for product thinking, launches, and practical workshops.",
-    email: "product.guild@rvu.edu",
+    type: "Club Core",
+    clubSlug: "",
+    school: schools[0],
+    roleTitle: "Core Member",
+    name: "",
+    category: "",
+    description: "",
+    email: "",
+    joinLink: "",
+    approver: "Current president",
+    approvedBy: "Super Admin",
     approved: false,
   },
   filters: {
@@ -82,12 +74,59 @@ const state = {
     announcementType: "All",
     projectTag: "All",
   },
+  allUsers: [],
+  allEvents: [],
+  allAnnouncements: [],
+  allClubs: [],
 };
 
 const app = document.querySelector("#app");
 
+function replaceCollection(target, values) {
+  target.splice(0, target.length, ...values);
+}
+
 function icon(name) {
   return icons[name] || "";
+}
+
+function isClubCore() {
+  return state.role === "club-core";
+}
+
+function isSchoolRep() {
+  return state.role === "school-rep";
+}
+
+function isSuperAdmin() {
+  return state.role === "admin";
+}
+
+function canHost() {
+  return (isClubCore() || isSchoolRep()) && state.host.approved;
+}
+
+function roleLabel() {
+  if (isSuperAdmin()) return "Super admin";
+  if (isClubCore()) return state.host.approved ? "Club core" : "Club pending";
+  if (isSchoolRep()) return state.host.approved ? "School rep" : "School pending";
+  return "Student";
+}
+
+function activeClub() {
+  return clubs.find((item) => item.slug === state.host.clubSlug || item.id === state.host.clubSlug) || clubs[0] || {
+    id: "",
+    slug: "",
+    name: "No club selected",
+    category: "Club",
+    school: state.host.school,
+    tagline: "Create or approve clubs in Firestore to enable club controls.",
+    description: "No approved club records are available yet.",
+    doing: "Waiting for club data.",
+    highlights: [],
+    registrationOpen: false,
+    join: "",
+  };
 }
 
 function render() {
@@ -98,6 +137,205 @@ function render() {
 function renderAtTop() {
   render();
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+}
+
+async function syncFirebaseData() {
+  if (!window.RVUFirebase || !state.authUser) return;
+  state.dataLoading = true;
+  render();
+  const profile = await window.RVUFirebase.ensureUserProfile(state.authUser);
+  const roleMap = {
+    superAdmin: "admin",
+    clubCore: "club-core",
+    schoolRepresentative: "school-rep",
+    student: "student",
+  };
+  state.role = roleMap[profile.role] || "student";
+  state.user.name = profile.name || state.authUser.displayName || state.user.name;
+  state.user.school = profile.school || state.user.school;
+  state.user.year = profile.year || state.user.year;
+  state.user.interests = profile.interests || state.user.interests;
+  if (profile.clubId) state.host.clubSlug = profile.clubId;
+  if (profile.schoolScope) state.host.school = profile.schoolScope;
+  if (profile.roleTitle) state.host.roleTitle = profile.roleTitle;
+  if (profile.hostName) state.host.name = profile.hostName;
+  if (profile.hostApproved !== undefined) state.host.approved = profile.hostApproved;
+  if (profile.role === "superAdmin" || profile.onboardingComplete) {
+    state.onboardingStep = null;
+  } else if (!state.onboardingStep) {
+    state.onboardingStep = "role";
+  }
+  const data = await window.RVUFirebase.loadCampusData({ superAdmin: state.role === "admin" });
+  replaceCollection(clubs, data.clubs);
+  replaceCollection(events, data.events.map(normalizeEvent));
+  replaceCollection(announcements, data.announcements);
+  replaceCollection(projects, data.projects);
+  state.hostRequests = data.hostRequests || [];
+  state.moderationFlags = data.moderationFlags || [];
+  state.allUsers = data.allUsers || [];
+  state.allEvents = data.allEvents || [];
+  state.allAnnouncements = data.allAnnouncements || [];
+  state.allClubs = data.allClubs || [];
+  state.dataLoaded = true;
+  state.dataLoading = false;
+}
+
+function normalizeEvent(event) {
+  const eventDate = event.date || event.displayDate || "";
+  return {
+    colors: ["#233039", "#926d2f"],
+    tags: [],
+    sort: 999,
+    ...event,
+    date: eventDate,
+    past: event.past || false,
+  };
+}
+
+async function enterAuthenticatedApp(user) {
+  if (!user) {
+    window.alert("Authentication required. Please sign in with your RVU email.");
+    return;
+  }
+  state.authed = true;
+  state.authUser = user;
+  if (user.displayName) state.user.name = user.displayName;
+  try {
+    await syncFirebaseData();
+  } catch (error) {
+    state.dataLoading = false;
+    window.alert(error.message || "Could not load Firebase data.");
+  }
+  renderAtTop();
+}
+
+async function handleSignOut() {
+  if (!window.RVUFirebase) return;
+  try {
+    await window.RVUFirebase.signOut();
+    state.authed = false;
+    state.authUser = null;
+    state.role = null;
+    state.dataLoaded = false;
+    state.onboardingStep = "role";
+    state.route = "home";
+    state.user = { name: "", school: schools[0], year: "1", interests: [] };
+    state.allUsers = [];
+    state.allEvents = [];
+    state.allAnnouncements = [];
+    state.allClubs = [];
+    renderAtTop();
+  } catch (error) {
+    window.alert(error.message || "Sign-out failed.");
+  }
+}
+
+async function startFirebaseLogin(mode = "google") {
+  if (!window.RVUFirebase) {
+    window.alert("Firebase is still loading. Please wait a moment and try again.");
+    return;
+  }
+
+  try {
+    if (mode === "password") {
+      const email = state.authEmail.trim();
+      const password = state.authPassword;
+      if (!email || !password) throw new Error("Enter your RVU email and password.");
+      const user = state.authMode === "signup"
+        ? await window.RVUFirebase.createEmailPasswordAccount(email, password)
+        : await window.RVUFirebase.signInWithEmailPassword(email, password);
+      await enterAuthenticatedApp(user);
+      state.loginOpen = false;
+      state.authPassword = "";
+      return;
+    }
+    const user = await window.RVUFirebase.signInWithGoogle();
+    await enterAuthenticatedApp(user);
+    state.loginOpen = false;
+  } catch (error) {
+    window.alert(error.message || "Firebase sign-in failed.");
+  }
+}
+
+async function createFirebaseEvent() {
+  if (!window.RVUFirebase) return;
+  if (!canHost() && !isSuperAdmin()) {
+    window.alert("You need an approved club core or school representative role to create events.");
+    return;
+  }
+  const title = window.prompt("Event title");
+  if (!title) return;
+  const description = window.prompt("Short description") || "";
+  const date = window.prompt("Display date, e.g. May 12") || "";
+  const time = window.prompt("Time, e.g. 5:30 PM") || "";
+  const location = window.prompt("Location") || "";
+  const club = activeClub();
+  const payload = isClubCore()
+    ? {
+        title,
+        description,
+        date,
+        time,
+        location,
+        hostType: "club",
+        clubId: club.id || club.slug,
+        club: club.name,
+        host: club.name,
+        type: "Club Event",
+        tags: [club.category].filter(Boolean),
+      }
+    : {
+        title,
+        description,
+        date,
+        time,
+        location,
+        hostType: "school",
+        schoolId: state.host.school,
+        host: state.host.school,
+        type: "School Event",
+        tags: [],
+      };
+  await window.RVUFirebase.createEvent(payload);
+  await syncFirebaseData();
+  state.createOpen = false;
+}
+
+async function createFirebaseAnnouncement() {
+  if (!window.RVUFirebase) return;
+  if (!canHost() && !isSuperAdmin()) {
+    window.alert("You need an approved club core or school representative role to create announcements.");
+    return;
+  }
+  const title = window.prompt("Announcement title");
+  if (!title) return;
+  const description = window.prompt("Short description") || "";
+  const tag = window.prompt("Tag, e.g. Recruitment, Notice, Update") || "Update";
+  const club = activeClub();
+  const payload = isClubCore()
+    ? {
+        title,
+        description,
+        tag,
+        sourceType: "club",
+        clubId: club.id || club.slug,
+        source: club.name,
+        type: "Club",
+        time: "Just now",
+      }
+    : {
+        title,
+        description,
+        tag,
+        sourceType: "school",
+        schoolId: state.host.school,
+        source: state.host.school,
+        type: "Faculty",
+        time: "Just now",
+      };
+  await window.RVUFirebase.createAnnouncement(payload);
+  await syncFirebaseData();
+  state.createOpen = false;
 }
 
 function renderLanding() {
@@ -113,17 +351,44 @@ function renderLanding() {
         <h1>Everything happening at RVU. In one place.</h1>
         <p>Events, clubs, announcements, and student projects presented with the clarity of a modern campus command center.</p>
         <div class="hero-actions">
-          <button class="btn gold" data-action="login">${icon("mail")} Continue with RVU Email</button>
-          <button class="btn ghost" data-action="preview">Preview campus dashboard</button>
+          <button class="btn gold" data-action="open-login">Continue with RVU Email</button>
+          <button class="btn ghost" data-action="login-google">Continue with Google</button>
         </div>
       </section>
       <section class="hero-peek" aria-label="Campus highlights">
-        <div class="peek-tile"><strong>This week</strong>3 upcoming campus events</div>
-        <div class="peek-tile"><strong>Important</strong>Recruitment and notices</div>
-        <div class="peek-tile"><strong>Projects</strong>Open teams seeking skills</div>
-        <div class="peek-tile"><strong>Hosts</strong>Clubs and faculty in one place</div>
+        <div class="peek-tile"><strong>This week</strong>Live events from Firestore</div>
+        <div class="peek-tile"><strong>Important</strong>Published notices only</div>
+        <div class="peek-tile"><strong>Projects</strong>Verified student posts</div>
+        <div class="peek-tile"><strong>Hosts</strong>Approved clubs and schools</div>
       </section>
+      <footer class="site-footer hero-footer"><span>powered by iterium</span></footer>
+      ${state.loginOpen ? renderAuthModal() : ""}
     </main>
+  `;
+}
+
+function renderAuthModal() {
+  return `
+    <div class="modal-layer">
+      <section class="modal auth-modal">
+        <p class="eyebrow">RVU account</p>
+        <h2>${state.authMode === "signup" ? "Create account" : "Sign in"}</h2>
+        <p>Use your RVU email and password. Role selection happens after authentication.</p>
+        <div class="auth-switch">
+          <button class="${state.authMode === "signin" ? "active" : ""}" data-action="auth-mode" data-mode="signin">Sign in</button>
+          <button class="${state.authMode === "signup" ? "active" : ""}" data-action="auth-mode" data-mode="signup">Create</button>
+        </div>
+        <div class="form-grid">
+          ${inputField("authEmail", "RVU Email", state.authEmail, "email")}
+          ${inputField("authPassword", "Password", state.authPassword, "password")}
+        </div>
+        <div class="auth-actions">
+          <button class="btn gold" data-action="login-password">${state.authMode === "signup" ? "Create account" : "Sign in"}</button>
+          <button class="btn secondary" data-action="login-google">Use Google</button>
+          <button class="btn ghost" data-action="close-login">Cancel</button>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -136,19 +401,29 @@ function renderAppShell() {
           ${navButtons(false)}
         </nav>
         <div class="top-actions">
-          ${state.role === "host" ? createButton() : ""}
-          <button class="role-pill" data-action="switch-role">${state.role === "host" ? (state.host.approved ? "Host approved" : "Host pending") : state.role === "admin" ? "Super admin" : "Student"}</button>
+          ${canHost() || isSuperAdmin() ? createButton() : ""}
+          <button class="role-pill" type="button" aria-label="Current role">${roleLabel()}</button>
+          <button class="btn ghost sign-out-btn" data-action="sign-out" aria-label="Sign out">Sign out</button>
         </div>
       </header>
       ${renderTicker()}
       <main class="main">
         ${renderRoute()}
       </main>
+      ${renderFooter()}
       <nav class="bottom-nav" aria-label="Primary navigation">
         ${navButtons(true)}
       </nav>
       ${state.onboardingStep ? renderOnboarding() : ""}
     </div>
+  `;
+}
+
+function renderFooter() {
+  return `
+    <footer class="site-footer">
+      <span>powered by iterium</span>
+    </footer>
   `;
 }
 
@@ -165,7 +440,6 @@ function brandLockup() {
       <img class="brand-logo" src="./assets/rv-university-logo-gold.png" alt="RV University" />
       <div class="brand-copy">
         <strong>RVU Connect</strong>
-        <small>Go, change the world</small>
       </div>
     </div>
   `;
@@ -179,6 +453,9 @@ function navButtons(withIcons) {
     ["projects", "Projects", "projects"],
     ["announcements", withIcons ? "Updates" : "Announcements", "announce"],
   ];
+  if (isClubCore() || isSchoolRep() || isSuperAdmin()) {
+    items.push(["admin", "Admin", "admin"]);
+  }
   return items.map(([route, label, iconName]) => `
     <button class="${withIcons ? "nav-item" : ""} ${state.route === route ? "active" : ""}" data-route="${route}">
       ${withIcons ? icon(iconName) : ""}<span>${label}</span>
@@ -187,16 +464,13 @@ function navButtons(withIcons) {
 }
 
 function createButton() {
-  if (!state.host.approved) {
-    return `<button class="btn secondary" data-action="host-review">Under review</button>`;
-  }
   return `
     <div class="create-wrap">
       <button class="btn" data-action="toggle-create">${icon("plus")} Create</button>
       ${state.createOpen ? `
         <div class="create-menu">
-          <button data-action="toast" data-message="Create Event flow is ready for approved hosts.">Create Event</button>
-          <button data-action="toast" data-message="Create Announcement flow is ready for approved hosts.">Create Announcement</button>
+          <button data-action="create-event">Create Event</button>
+          <button data-action="create-announcement">Create Announcement</button>
         </div>
       ` : ""}
     </div>
@@ -204,16 +478,39 @@ function createButton() {
 }
 
 function renderRoute() {
+  if (state.dataLoading) return renderLoadingState();
   if (state.route === "events") return renderEvents();
   if (state.route === "clubs") return renderClubs();
   if (state.route === "projects") return renderProjects();
   if (state.route === "announcements") return renderAnnouncements();
+  if (state.route === "admin") return renderAdminConsole();
   return renderHome();
+}
+
+function renderLoadingState() {
+  return `
+    <section class="page-head">
+      ${sectionLabel("00", "Firebase")}
+      <h1>Loading campus data</h1>
+      <p>RVU Connect is syncing your profile, events, clubs, announcements, and project data from Firestore.</p>
+    </section>
+  `;
+}
+
+function renderEmptyState(title, copy, action = "") {
+  return `
+    <article class="card announcement empty-state">
+      <h3>${title}</h3>
+      <p>${copy}</p>
+      ${action}
+    </article>
+  `;
 }
 
 function renderHome() {
   const upcoming = events.filter((event) => !event.past).sort((a, b) => a.sort - b.sort).slice(0, 5);
   const personalized = [...events, ...projects].filter((item) => (item.tags || []).some((tag) => state.user.interests.includes(tag) || state.user.interests.includes(tag.replace("Web", "Web Development")))).slice(0, 4);
+  const nextEvent = upcoming[0];
   return `
     <section class="page-head dashboard-head">
       <div>
@@ -222,39 +519,38 @@ function renderHome() {
         <p>Upcoming events, project opportunities, and priority updates arranged for action, not endless scrolling.</p>
       </div>
       <div class="campus-metrics" aria-label="Campus activity summary">
-        <span><strong>5</strong> live events</span>
-        <span><strong>6</strong> approved clubs</span>
-        <span><strong>3</strong> urgent updates</span>
+        <span><strong>${events.filter((event) => !event.past).length}</strong> live events</span>
+        <span><strong>${clubs.length}</strong> approved clubs</span>
+        <span><strong>${announcements.length}</strong> updates</span>
       </div>
     </section>
     <div class="home-layout">
       <div>
-        <section class="spotlight">
+        ${nextEvent ? `<section class="spotlight">
           <div>
             <span class="tag gold">Next up</span>
-            <h2>${upcoming[0].title}</h2>
-            <p>${upcoming[0].description}</p>
+            <h2>${nextEvent.title}</h2>
+            <p>${nextEvent.description}</p>
           </div>
           <div class="spotlight-date">
-            <strong>${upcoming[0].date}</strong>
-            <span>${upcoming[0].time}</span>
+            <strong>${nextEvent.date}</strong>
+            <span>${nextEvent.time || ""}</span>
           </div>
-        </section>
+        </section>` : `<section class="section">${renderEmptyState("No live events yet", "Published events from Firestore will appear here once approved club core or school representatives create them.")}</section>`}
         <section class="section">
           <div class="section-title"><h2>This Week at RVU</h2><span>Soonest first</span></div>
-          <div class="grid event-grid">${upcoming.map(renderEventCard).join("")}</div>
+          ${upcoming.length ? `<div class="grid event-grid">${upcoming.map(renderEventCard).join("")}</div>` : renderEmptyState("No upcoming events", "Events with status published will appear here.")}
         </section>
         <section class="section">
           <div class="section-title"><h2>Personalized For You</h2><span>${state.user.interests.join(", ")}</span></div>
-          <div class="grid event-grid">${personalized.map(renderPersonalCard).join("")}</div>
+          ${personalized.length ? `<div class="grid event-grid">${personalized.map(renderPersonalCard).join("")}</div>` : renderEmptyState("Nothing personalized yet", "Add interests and publish matching events or projects in Firestore.")}
         </section>
       </div>
       <aside>
         <section class="section">
           <div class="section-title"><h2>Important Updates</h2><span>High priority</span></div>
-          <div class="updates">${announcements.slice(0, 3).map(renderUpdate).join("")}</div>
+          ${announcements.length ? `<div class="updates">${announcements.slice(0, 3).map(renderUpdate).join("")}</div>` : renderEmptyState("No announcements yet", "Published announcements from clubs and schools will appear here.")}
         </section>
-        ${state.role === "admin" ? renderAdminPanel() : ""}
         <section class="section">
           <div class="section-title"><h2>Quick Access</h2></div>
           <div class="grid quick-grid">
@@ -286,16 +582,17 @@ function renderEvents() {
     </div>
     <section class="section">
       <div class="section-title"><h2>Upcoming</h2><span>${upcoming.length} events</span></div>
-      <div class="grid event-grid">${upcoming.map(renderEventCard).join("")}</div>
+      ${upcoming.length ? `<div class="grid event-grid">${upcoming.map(renderEventCard).join("")}</div>` : renderEmptyState("No upcoming events", "When approved hosts create published events in Firestore, they will appear here.")}
     </section>
     <section class="section">
       <div class="section-title"><h2>Past Events</h2><span>Archived</span></div>
-      <div class="grid event-grid">${past.map(renderEventCard).join("")}</div>
+      ${past.length ? `<div class="grid event-grid">${past.map(renderEventCard).join("")}</div>` : renderEmptyState("No archived events", "Past events will stay visible after their date has passed.")}
     </section>
   `;
 }
 
 function renderClubs() {
+  if (state.selectedClubSlug) return renderClubDetail();
   const filtered = clubs.filter((club) =>
     (state.filters.clubCategory === "All" || club.category === state.filters.clubCategory) &&
     (state.filters.clubSchool === "All" || club.school === state.filters.clubSchool)
@@ -304,19 +601,72 @@ function renderClubs() {
     <section class="page-head">
       ${sectionLabel("03", "Approved hosts only")}
       <h1>Clubs</h1>
-      <p>A clean directory of campus groups, their focus areas, upcoming events, and join links.</p>
+      <p>Here are the approved clubs that exist on RVU Connect. Tap into a club to see what they do, what they have hosted, and whether registrations are open.</p>
     </section>
     <div class="filters">
       ${selectField("clubCategory", "Category", ["All", ...unique(clubs.map((club) => club.category))], state.filters.clubCategory)}
       ${selectField("clubSchool", "School", ["All", ...unique(clubs.map((club) => club.school))], state.filters.clubSchool)}
     </div>
-    <div class="grid club-grid">${filtered.map(renderClubCard).join("")}</div>
+    ${filtered.length ? `<div class="grid club-grid">${filtered.map(renderClubCard).join("")}</div>` : renderEmptyState("No approved clubs yet", "Create approved club documents in Firestore or approve club host requests to populate this directory.")}
+  `;
+}
+
+function renderClubDetail() {
+  const club = clubs.find((item) => item.slug === state.selectedClubSlug) || clubs[0];
+  if (!club) return renderClubs();
+  const clubEvents = events.filter((event) => event.club === club.name || event.host === club.name);
+  const upcoming = clubEvents.filter((event) => !event.past);
+  const past = clubEvents.filter((event) => event.past);
+  return `
+    <section class="club-detail-hero">
+      <button class="back-link" data-action="back-to-clubs">Back to all clubs</button>
+      <div class="club-detail-mark">${club.name.split(" ").map((word) => word[0]).slice(0, 2).join("")}</div>
+      <div>
+        ${sectionLabel("03", club.category)}
+        <h1>${club.name}</h1>
+        <p>${club.tagline}</p>
+      </div>
+      <div class="club-detail-meta">
+        <span>${club.school}</span>
+        <span>${clubEvents.length} campus ${clubEvents.length === 1 ? "event" : "events"}</span>
+        <span>${club.registrationOpen ? "Registration open" : "Registration closed"}</span>
+      </div>
+    </section>
+    <section class="club-detail-layout">
+      <article class="club-panel club-about">
+        <span class="section-num">About</span>
+        <h2>What they do</h2>
+        <p>${club.description}</p>
+      </article>
+      <article class="club-panel club-now">
+        <span class="section-num">Now</span>
+        <h2>Currently active on</h2>
+        <p>${club.doing}</p>
+      </article>
+      <article class="club-panel">
+        <span class="section-num">Record</span>
+        <h2>What they have done</h2>
+        <div class="club-highlights">
+          ${(club.highlights || []).length ? club.highlights.map((item) => `<span>${item}</span>`).join("") : `<span>No highlights published yet</span>`}
+        </div>
+      </article>
+      <article class="club-panel club-join-panel">
+        <span class="section-num">Join</span>
+        <h2>${club.registrationOpen ? "Registrations are open" : "Registrations are closed"}</h2>
+        <p>${club.registrationOpen ? "This club is currently accepting new members through its registration form." : "This club is visible on RVU Connect, but it is not accepting new registrations right now."}</p>
+        ${club.registrationOpen ? `<button class="btn gold" data-action="toast" data-message="Join link: ${club.join}">Open join link</button>` : `<span class="tag">No active join link</span>`}
+      </article>
+    </section>
+    <section class="section">
+      <div class="section-title"><h2>Club events</h2><span>${clubEvents.length ? "Hosted by club" : "No events yet"}</span></div>
+      ${clubEvents.length ? `<div class="grid event-grid">${clubEvents.map(renderEventCard).join("")}</div>` : renderEmptyState("No events listed yet", "When this club posts published events, they will appear here.")}
+    </section>
   `;
 }
 
 function renderProjects() {
-  const tags = unique(projects.flatMap((project) => project.tags));
-  const filtered = projects.filter((project) => state.filters.projectTag === "All" || project.tags.includes(state.filters.projectTag));
+  const tags = unique(projects.flatMap((project) => project.tags || []));
+  const filtered = projects.filter((project) => state.filters.projectTag === "All" || (project.tags || []).includes(state.filters.projectTag));
   return `
     <section class="page-head">
       ${sectionLabel("04", "Student collaboration")}
@@ -327,7 +677,7 @@ function renderProjects() {
       ${selectField("projectTag", "Tag", ["All", ...tags], state.filters.projectTag)}
       ${selectField("status", "Status", ["All", "Open", "Closed"], "All")}
     </div>
-    <div class="grid project-grid">${filtered.map(renderProjectCard).join("")}</div>
+    ${filtered.length ? `<div class="grid project-grid">${filtered.map(renderProjectCard).join("")}</div>` : renderEmptyState("No projects yet", "Verified users can create project posts in Firestore.")}
   `;
 }
 
@@ -343,7 +693,7 @@ function renderAnnouncements() {
       ${selectField("announcementType", "Source Type", ["All", "Club", "Faculty"], state.filters.announcementType)}
       ${selectField("announcementTag", "Tag", ["All", "Recruitment", "Notice", "Update"], "All")}
     </div>
-    <div class="updates">${filtered.map(renderAnnouncement).join("")}</div>
+    ${filtered.length ? `<div class="updates">${filtered.map(renderAnnouncement).join("")}</div>` : renderEmptyState("No announcements yet", "Approved clubs and school representatives can publish structured updates.")}
   `;
 }
 
@@ -356,18 +706,375 @@ function sectionLabel(number, label) {
   `;
 }
 
+function renderAdminConsole() {
+  if (!isClubCore() && !isSchoolRep() && !isSuperAdmin()) return renderRestrictedAdmin();
+  if ((isClubCore() || isSchoolRep()) && !state.host.approved) return renderPendingAdminAccess();
+  if (isSuperAdmin()) return renderSuperAdminDashboard();
+  const dashboard = isClubCore() ? renderClubAdmin() : renderSchoolAdmin();
+  return `
+    <section class="page-head admin-head">
+      ${sectionLabel("06", "Control rooms")}
+      <h1>${isClubCore() ? "Club Core Dashboard" : "School Representative Dashboard"}</h1>
+      <p>Your controls are scoped to the organization your approved representative record grants. This dashboard cannot change your role.</p>
+    </section>
+    ${dashboard}
+  `;
+}
+
+function renderSuperAdminDashboard() {
+  return `
+    <section class="page-head admin-head">
+      ${sectionLabel("06", "Platform authority")}
+      <h1>Super Admin Dashboard</h1>
+      <p>Super admin access is granted only by the Firestore user document. From here you review representative requests, moderate content, and maintain platform registries.</p>
+    </section>
+    ${renderSuperAdmin()}
+  `;
+}
+
+function renderRestrictedAdmin() {
+  return `
+    <section class="page-head admin-head">
+      ${sectionLabel("06", "Restricted")}
+      <h1>Admin access</h1>
+      <p>Admin screens are only available when your Firestore profile or approved representative record grants access. Students cannot switch themselves into admin roles from the client.</p>
+    </section>
+  `;
+}
+
+function renderPendingAdminAccess() {
+  return `
+    <section class="page-head admin-head">
+      ${sectionLabel("06", "Pending verification")}
+      <h1>${isClubCore() ? "Club core request" : "School representative request"}</h1>
+      <p>${isClubCore() ? `${activeClub().name} core access must be approved by the current president or a super admin before event hosting is enabled.` : `${state.host.school} representative access must be approved by a super admin before school controls are enabled.`}</p>
+    </section>
+    <section class="admin-workspace">
+      <div class="admin-summary">
+        <span><strong>Pending</strong> access state</span>
+        <span><strong>${isClubCore() ? activeClub().name : "School"}</strong> scope</span>
+        <span><strong>${state.host.approver}</strong> approver route</span>
+      </div>
+      <div class="admin-board">
+        <article class="admin-card wide">
+          <span class="section-num">Request</span>
+          <h2>${state.host.roleTitle}</h2>
+          <p>${state.host.description}</p>
+          <div class="admin-checklist">
+            <span>Cannot create events until approved</span>
+            <span>Cannot post announcements until approved</span>
+            <span>Can be approved by ${isClubCore() ? "the club president or super admin" : "super admin"}</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderSchoolAdmin() {
+  const schoolName = isSuperAdmin() ? "All schools" : state.host.school;
+  const schoolEvents = events.filter((event) => event.type === "School Event" || event.type === "Faculty Event");
+  return `
+    <section class="admin-workspace">
+      <div class="admin-summary">
+        <span><strong>${isSuperAdmin() ? schools.length : "1"}</strong> ${isSuperAdmin() ? "schools" : "school scope"}</span>
+        <span><strong>${schoolEvents.length}</strong> school/faculty events</span>
+        <span><strong>${state.host.approved || isSuperAdmin() ? "Enabled" : "Locked"}</strong> school posting</span>
+      </div>
+      <div class="admin-board">
+        <article class="admin-card wide">
+          <span class="section-num">Scope</span>
+          <h2>${schoolName}</h2>
+          <p>School representatives can post school events, faculty announcements, registration links, and notices only for the school they are verified under.</p>
+          <div class="project-actions">
+            <button class="btn gold" data-action="create-event">Create school event</button>
+            <button class="btn secondary" data-action="create-announcement">Create school notice</button>
+          </div>
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Links</span>
+          <h2>Official links</h2>
+          <div class="admin-checklist">
+            <span>Primary link: ${state.host.joinLink || "No link configured"}</span>
+            <span>Visible on school notices and school events</span>
+            <span>Editable only by approved school representatives</span>
+          </div>
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Notice</span>
+          <h2>School announcements</h2>
+          ${announcements.filter((item) => item.sourceType === "school" || item.type === "Faculty").slice(0, 3).map((item) => adminRow(item.title, `${item.source || "School"} · ${item.tag || "Update"}`, ["Edit", "Archive"])).join("") || renderEmptyState("No school announcements", "Published school announcements will appear here.")}
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Events</span>
+          <h2>Event controls</h2>
+          ${schoolEvents.slice(0, 3).map((event) => adminRow(event.title, `${event.host || "School"} · ${event.date || ""} · ${event.location || ""}`, ["Edit", "Archive"])).join("") || renderEmptyState("No school events", "Create a school event to see it here.")}
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Rules</span>
+          <h2>Representative limits</h2>
+          <div class="admin-checklist">
+            <span>Post only for the verified school</span>
+            <span>Show or hide official registration and resource links</span>
+            <span>Primary link: ${state.host.joinLink || "No link configured"}</span>
+            <span>Cannot approve club core members</span>
+            <span>Escalate moderation issues to Super Admin</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderClubAdmin() {
+  const club = isSuperAdmin() ? activeClub() : activeClub();
+  const clubEvents = events.filter((event) => event.club === club.name || event.host === club.name);
+  const clubAnnouncements = announcements.filter((item) => item.clubId === club.id || item.clubId === club.slug || item.source === club.name);
+  return `
+    <section class="admin-workspace">
+      <div class="admin-summary">
+        <span><strong>${clubEvents.length}</strong> club events</span>
+        <span><strong>${club.registrationOpen ? "Open" : "Closed"}</strong> registration</span>
+        <span><strong>${state.host.roleTitle}</strong> your role</span>
+      </div>
+      <div class="admin-board">
+        <article class="admin-card wide">
+          <span class="section-num">Club</span>
+          <h2>${club.name}</h2>
+          <p>Only approved core members can host events, publish announcements, and control the links shown for ${club.name}.</p>
+          <div class="project-actions">
+            <button class="btn gold" data-action="create-event">Create club event</button>
+            <button class="btn secondary" data-action="create-announcement">Create update</button>
+            <button class="btn gold" data-action="toggle-registration" data-club="${club.slug}">${club.registrationOpen ? "Close registration" : "Open registration"}</button>
+            <button class="btn secondary" data-action="toast" data-message="Link visibility controls are ready for ${club.name}.">Manage links</button>
+          </div>
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Links</span>
+          <h2>Visible links</h2>
+          <div class="admin-checklist">
+            <span>Join link: ${state.host.joinLink || club.join || "No link configured"}</span>
+            <span>Registration state: ${club.registrationOpen ? "Open" : "Closed"}</span>
+            <span>Shown only on this club's public profile</span>
+          </div>
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Host</span>
+          <h2>Club posting</h2>
+          ${[...clubEvents.map((event) => ({ title: event.title, meta: `Event · ${event.date || ""}` })), ...clubAnnouncements.map((item) => ({ title: item.title, meta: `Announcement · ${item.tag || "Update"}` }))].slice(0, 4).map((item) => adminRow(item.title, item.meta, ["Edit", "Archive"])).join("") || renderEmptyState("No club posts", "Create an event or announcement to manage it here.")}
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Core</span>
+          <h2>Core approval</h2>
+          ${state.hostRequests.filter((item) => item.type === "clubCore" && item.clubId === (club.id || club.slug)).map((item) => adminRow(item.name || item.email, `${item.roleTitle || "Core"} · ${item.status}`, ["Accept", "Waitlist"])).join("") || renderEmptyState("No core requests", "Club core requests will appear here after students apply.")}
+        </article>
+        <article class="admin-card">
+          <span class="section-num">Limits</span>
+          <h2>Permission boundary</h2>
+          <div class="admin-checklist">
+            <span>Can host only for ${club.name}</span>
+            <span>Can edit this club profile and visible links</span>
+            <span>Primary join link: ${state.host.joinLink || club.join}</span>
+            <span>Can approve core only if president-level access is granted</span>
+            <span>Cannot post for another club or school</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderSuperAdmin() {
+  const tabs = [
+    ["requests", "Requests", state.hostRequests.length],
+    ["users", "Users", state.allUsers.length],
+    ["clubs", "Clubs", state.allClubs.length],
+    ["events", "Events", state.allEvents.length],
+    ["announcements", "Notices", state.allAnnouncements.length],
+    ["moderation", "Flags", state.moderationFlags.length],
+  ];
+
+  const tabBar = `
+    <div class="admin-tabs">
+      ${tabs.map(([key, label, count]) => `
+        <button class="${state.adminTab === key ? "active" : ""}" data-action="admin-tab" data-tab="${key}">
+          ${label} <small>(${count})</small>
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  let content = "";
+
+  if (state.adminTab === "requests") {
+    const pending = state.hostRequests.filter((r) => r.status === "pending");
+    const resolved = state.hostRequests.filter((r) => r.status !== "pending");
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">Pending</span>
+        <h2>Pending Requests</h2>
+        ${pending.length ? pending.map((item) =>
+          adminRow(item.name || item.email, `${item.type} · ${item.roleTitle || "Representative"} · ${item.email}`, ["Approve", "Reject"], "host", item.id)
+        ).join("") : renderEmptyState("No pending requests", "Club core and school representative requests will appear here.")}
+      </article>
+      <article class="admin-card">
+        <span class="section-num">History</span>
+        <h2>Resolved</h2>
+        ${resolved.length ? resolved.map((item) =>
+          `<div class="admin-row"><div><strong>${item.name || item.email}</strong><span>${item.type} · ${item.status}</span></div></div>`
+        ).join("") : renderEmptyState("No history", "Resolved requests will appear here.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "users") {
+    const roleLabels = { superAdmin: "Super Admin", clubCore: "Club Core", schoolRepresentative: "School Rep", student: "Student" };
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">Directory</span>
+        <h2>All Users</h2>
+        <p>User roles are managed in Firestore. Super admin role can only be set directly in the database.</p>
+        ${state.allUsers.length ? state.allUsers.map((u) => `
+          <div class="admin-row">
+            <div>
+              <strong>${u.name || u.email || u.id}</strong>
+              <span>${u.email || "No email"} · ${roleLabels[u.role] || u.role || "student"} · ${u.school || "No school"}</span>
+            </div>
+            <div class="admin-row-actions">
+              <button class="role-indicator">${roleLabels[u.role] || u.role || "student"}</button>
+            </div>
+          </div>
+        `).join("") : renderEmptyState("No users yet", "Users will appear here after they sign in.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "clubs") {
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">Registry</span>
+        <h2>All Clubs</h2>
+        <div class="project-actions" style="margin-bottom:18px">
+          <button class="btn gold" data-action="admin-create-club">Create new club</button>
+        </div>
+        ${state.allClubs.length ? state.allClubs.map((c) => `
+          <div class="admin-row">
+            <div>
+              <strong>${c.name}</strong>
+              <span>${c.category || "General"} · ${c.school || "RVU"} · Status: ${c.status || "unknown"} · Reg: ${c.registrationOpen ? "Open" : "Closed"}</span>
+            </div>
+            <div class="admin-row-actions">
+              <button data-action="admin-delete-club" data-docid="${c.id}">Delete</button>
+            </div>
+          </div>
+        `).join("") : renderEmptyState("No clubs", "Create a club to get started.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "events") {
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">All</span>
+        <h2>Event Management</h2>
+        ${state.allEvents.length ? state.allEvents.map((e) => `
+          <div class="admin-row">
+            <div>
+              <strong>${e.title}</strong>
+              <span>${e.host || e.club || "RVU"} · ${e.date || "No date"} · Status: ${e.status || "unknown"}</span>
+            </div>
+            <div class="admin-row-actions">
+              ${e.status === "published"
+                ? `<button data-action="admin-unpublish-event" data-docid="${e.id}">Unpublish</button>`
+                : `<button data-action="admin-publish-event" data-docid="${e.id}">Publish</button>`}
+              <button data-action="admin-delete-event" data-docid="${e.id}">Delete</button>
+            </div>
+          </div>
+        `).join("") : renderEmptyState("No events", "Events will appear here when created.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "announcements") {
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">All</span>
+        <h2>Announcement Management</h2>
+        ${state.allAnnouncements.length ? state.allAnnouncements.map((a) => `
+          <div class="admin-row">
+            <div>
+              <strong>${a.title}</strong>
+              <span>${a.source || "RVU"} · ${a.tag || "Update"} · Status: ${a.status || "unknown"}</span>
+            </div>
+            <div class="admin-row-actions">
+              ${a.status === "published"
+                ? `<button data-action="admin-unpublish-announcement" data-docid="${a.id}">Unpublish</button>`
+                : ""}
+              <button data-action="admin-delete-announcement" data-docid="${a.id}">Delete</button>
+            </div>
+          </div>
+        `).join("") : renderEmptyState("No announcements", "Announcements will appear here when created.")}
+      </article>
+    `;
+  }
+
+  if (state.adminTab === "moderation") {
+    content = `
+      <article class="admin-card wide">
+        <span class="section-num">Quality</span>
+        <h2>Moderation Flags</h2>
+        ${state.moderationFlags.length ? state.moderationFlags.map((item) =>
+          `<div class="admin-row"><div><strong>${item.title || item.reason || "Flag"}</strong><span>${item.collection || "Content"} · ${item.status || "Open"}</span></div></div>`
+        ).join("") : renderEmptyState("No moderation flags", "User-created moderation flags will appear here.")}
+      </article>
+    `;
+  }
+
+  return `
+    <section class="admin-workspace">
+      <div class="admin-summary">
+        <span><strong>${state.hostRequests.filter((r) => r.status === "pending").length}</strong> pending requests</span>
+        <span><strong>${state.allUsers.length}</strong> registered users</span>
+        <span><strong>${state.allClubs.length}</strong> total clubs</span>
+      </div>
+      ${tabBar}
+      <div class="admin-board">
+        ${content}
+      </div>
+    </section>
+  `;
+}
+
+function adminRow(title, meta, actions, mode = "generic", id = "") {
+  return `
+    <div class="admin-row">
+      <div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(meta)}</span></div>
+      <div class="admin-row-actions">
+        ${actions.map((action) => {
+          const dataAction = mode === "host" && action === "Approve" ? "approve-host" : mode === "host" && action === "Reject" ? "reject-host" : "toast";
+          return `<button data-action="${dataAction}" data-request="${id}" data-message="${action}: ${escapeHtml(title)}">${action}</button>`;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function renderEventCard(event) {
+  const colors = event.colors || ["#233039", "#926d2f"];
+  const date = escapeHtml(event.date || "TBA");
+  const dateParts = date.split(" ");
+  const tags = event.tags || [];
   return `
     <article class="card event-card">
-      <div class="poster" style="--poster-a:${event.colors[0]};--poster-b:${event.colors[1]}">
-        <strong>${event.date.split(" ")[0]}<br>${event.date.split(" ")[1] || ""}</strong>
-        <span>${event.type}</span>
+      <div class="poster" style="--poster-a:${colors[0]};--poster-b:${colors[1]}">
+        <strong>${dateParts[0]}<br>${dateParts[1] || ""}</strong>
+        <span>${escapeHtml(event.type || "Event")}</span>
       </div>
       <div class="card-body">
-        <div class="meta"><span>${event.date} · ${event.time}</span><span>${event.location}</span></div>
-        <h3>${event.title}</h3>
-        <p>${event.description}</p>
-        <div class="chip-grid">${event.tags.map((tag) => `<span class="tag gold">${tag}</span>`).join("")}<span class="tag">${event.host}</span></div>
+        <div class="meta"><span>${date} · ${escapeHtml(event.time || "Time TBA")}</span><span>${escapeHtml(event.location || "Location TBA")}</span></div>
+        <h3>${escapeHtml(event.title)}</h3>
+        <p>${escapeHtml(event.description || "")}</p>
+        <div class="chip-grid">${tags.map((tag) => `<span class="tag gold">${escapeHtml(tag)}</span>`).join("")}<span class="tag">${escapeHtml(event.host || "RVU")}</span></div>
       </div>
     </article>
   `;
@@ -381,9 +1088,9 @@ function renderPersonalCard(item) {
 function renderUpdate(item) {
   return `
     <article class="update-item">
-      <div class="meta"><span class="tag gold">${item.tag}</span><span>${item.source}</span><span>${item.time}</span></div>
-      <h3>${item.title}</h3>
-      <p>${item.description}</p>
+      <div class="meta"><span class="tag gold">${escapeHtml(item.tag || "Update")}</span><span>${escapeHtml(item.source || "RVU")}</span><span>${escapeHtml(item.time || "")}</span></div>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description || "")}</p>
     </article>
   `;
 }
@@ -395,29 +1102,31 @@ function quickCard(route, title, copy, iconName) {
 function renderClubCard(club) {
   const clubEvents = events.filter((event) => event.club === club.name || event.host === club.name).length;
   return `
-    <article class="card club-card">
+    <article class="card club-card" data-club-card="${club.slug || club.id}">
       <div class="club-top">
-        <div class="avatar">${club.name.split(" ").map((word) => word[0]).slice(0, 2).join("")}</div>
-        <div><h3>${club.name}</h3><span class="tag gold">${club.category}</span></div>
+        <div class="avatar">${escapeHtml(club.name.split(" ").map((word) => word[0]).slice(0, 2).join(""))}</div>
+        <div><h3>${escapeHtml(club.name)}</h3><span class="tag gold">${escapeHtml(club.category || "Club")}</span></div>
       </div>
-      <p>${club.description}</p>
-      <div class="meta"><span>${club.school}</span><span>${clubEvents} events</span></div>
-      <button class="btn secondary" data-action="toast" data-message="Join link: ${club.join}">Join link</button>
+      <p>${escapeHtml(club.tagline || club.description || "")}</p>
+      <div class="meta"><span>${escapeHtml(club.school || "RVU")}</span><span>${clubEvents} events</span><span>${club.registrationOpen ? "Open" : "Closed"}</span></div>
+      <button class="btn secondary" data-action="open-club" data-club="${club.slug || club.id}">View club</button>
     </article>
   `;
 }
 
 function renderProjectCard(project) {
+  const status = project.status || "Open";
+  const skills = project.skills || [];
   return `
     <article class="card project-card">
-      <div class="project-rail"><button data-action="toast" data-message="Bookmark saved">${icon("bookmark")}</button><span>${project.score}</span></div>
+      <div class="project-rail"><button data-action="toast" data-message="Bookmark saved">${icon("bookmark")}</button><span>${project.score || 0}</span></div>
       <div class="card-body">
-        <div class="meta"><span class="status ${project.status.toLowerCase()}">${project.status}</span><span>Expires ${project.expiry}</span></div>
-        <h3>${project.title}</h3>
-        <p>${project.description}</p>
-        <div class="chip-grid">${project.skills.map((skill) => `<span class="tag">${skill}</span>`).join("")}</div>
+        <div class="meta"><span class="status ${status.toLowerCase()}">${escapeHtml(status)}</span><span>Expires ${escapeHtml(project.expiry || "TBA")}</span></div>
+        <h3>${escapeHtml(project.title)}</h3>
+        <p>${escapeHtml(project.description || "")}</p>
+        <div class="chip-grid">${skills.map((skill) => `<span class="tag">${escapeHtml(skill)}</span>`).join("")}</div>
         <div class="project-actions">
-          <button class="btn gold" data-action="toast" data-message="Application stored for ${project.title}.">Apply</button>
+          <button class="btn gold" data-action="toast" data-message="Application stored.">Apply</button>
           <button class="btn secondary" data-action="toast" data-message="Project bookmarked.">Save</button>
         </div>
       </div>
@@ -428,31 +1137,14 @@ function renderProjectCard(project) {
 function renderAnnouncement(item) {
   return `
     <article class="card announcement">
-      <div class="meta"><span class="tag gold">${item.tag}</span><span>${item.source}</span><span>${item.time}</span></div>
-      <h3>${item.title}</h3>
-      <p>${item.description}</p>
+      <div class="meta"><span class="tag gold">${escapeHtml(item.tag || "Update")}</span><span>${escapeHtml(item.source || "RVU")}</span><span>${escapeHtml(item.time || "")}</span></div>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description || "")}</p>
     </article>
   `;
 }
 
-function renderAdminPanel() {
-  return `
-    <section class="section admin-panel">
-      <div>
-        <h2>Host Approval Queue</h2>
-        <p>Super admins approve or reject hosts before they can publish events and announcements.</p>
-      </div>
-      <div class="request-row">
-        <strong>${state.host.name}</strong>
-        <span>${state.host.type} · ${state.host.category} · ${state.host.email}</span>
-        <div class="project-actions">
-          <button class="btn gold" data-action="approve-host">Approve</button>
-          <button class="btn ghost" data-action="reject-host">Reject</button>
-        </div>
-      </div>
-    </section>
-  `;
-}
+/* renderAdminPanel removed — superseded by renderSuperAdmin */
 
 function renderOnboarding() {
   if (state.onboardingStep === "role") {
@@ -464,8 +1156,8 @@ function renderOnboarding() {
           <p>Choose the mode that matches your campus role.</p>
           <div class="choice-grid">
             <button class="choice" data-onboard-role="student"><strong>Student</strong>Discover events, explore clubs, and join projects.</button>
-            <button class="choice" data-onboard-role="host"><strong>Host</strong>Create events, post announcements, and build presence.</button>
-            <button class="choice" data-onboard-role="admin"><strong>Super Admin</strong>Approve hosts, moderate activity, and maintain quality.</button>
+            <button class="choice" data-onboard-role="club-core"><strong>Club core</strong>Represent a club, manage links, and host club events after approval.</button>
+            <button class="choice" data-onboard-role="school-rep"><strong>School representative</strong>Post school events, faculty notices, and official school links after approval.</button>
           </div>
         </section>
       </div>
@@ -500,20 +1192,23 @@ function renderOnboarding() {
     `;
   }
   if (state.onboardingStep === "host-info") {
+    const isClubRequest = state._onboardingIntent === "club-core";
+    const clubOptions = clubs.length ? clubs.map((club) => club.name) : ["No approved clubs available"];
     return `
       <div class="modal-layer">
         <section class="modal">
-          <p class="eyebrow">Host request</p>
-          <h2>Tell us about your host profile</h2>
+          <p class="eyebrow">${isClubRequest ? "Club core request" : "School representative request"}</p>
+          <h2>${isClubRequest ? "Which club are you core in?" : "Which school do you represent?"}</h2>
           <div class="form-grid two">
-            ${selectField("hostType", "Host Type", ["Club", "Faculty"], state.host.type)}
-            ${selectField("hostCategory", "Category", ["Tech", "AI", "Product", "Business", "Cultural"], state.host.category)}
+            ${isClubRequest ? selectField("hostClub", "Club", clubOptions, activeClub().name) : selectField("hostSchool", "School", schools, state.host.school)}
+            ${inputField("hostRoleTitle", "Role", state.host.roleTitle)}
           </div>
           <div class="form-grid">
-            ${inputField("hostName", "Name", state.host.name)}
+            ${inputField("hostName", isClubRequest ? "Core display name" : "Office / representative name", state.host.name)}
             ${inputField("hostEmail", "Contact Email", state.host.email)}
+            ${isClubRequest ? selectField("hostApprover", "Approval route", ["Current president", "Super Admin"], state.host.approver) : selectField("hostApprover", "Approval route", ["Super Admin"], "Super Admin")}
             <div class="field"><label>Description</label><textarea data-input="hostDescription">${state.host.description}</textarea></div>
-            ${inputField("hostJoin", "Join Link optional", "")}
+            ${inputField("hostJoin", "Join Link optional", state.host.joinLink)}
           </div>
           <button class="btn gold" data-action="submit-host">Submit for review</button>
         </section>
@@ -521,14 +1216,15 @@ function renderOnboarding() {
     `;
   }
   if (state.onboardingStep === "host-review") {
+    const isClubRequest = state._onboardingIntent === "club-core";
     return `
       <div class="modal-layer">
         <section class="modal">
           <p class="eyebrow">Approval state</p>
           <h2>Your request is under review.</h2>
-          <p>Until approved, this host account cannot post events or announcements.</p>
-          <div class="approval"><strong>${state.host.name}</strong><br>${state.host.type} · ${state.host.category}</div>
-          <button class="btn gold" data-action="close-onboarding">View dashboard</button>
+          <p>Until approved, this account cannot post events or announcements. ${isClubRequest ? "Club core can be approved by the current president or a super admin." : "School representatives are approved by a super admin."}</p>
+          <div class="approval"><strong>${state.host.name}</strong><br>${state.host.type} · ${isClubRequest ? activeClub().name : state.host.school}</div>
+          <button class="btn gold" data-action="close-onboarding">Continue to campus</button>
         </section>
       </div>
     `;
@@ -547,11 +1243,11 @@ function selectField(name, label, options, value) {
   `;
 }
 
-function inputField(name, label, value) {
+function inputField(name, label, value, type = "text") {
   return `
     <div class="field">
       <label>${label}</label>
-      <input data-input="${name}" value="${value}" />
+      <input data-input="${name}" type="${type}" value="${value}" />
     </div>
   `;
 }
@@ -560,17 +1256,48 @@ function unique(values) {
   return [...new Set(values)];
 }
 
+function escapeHtml(str) {
+  if (typeof str !== "string") return str == null ? "" : String(str);
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function bindEvents() {
+  if (!window.rvuAuthListenersBound) {
+    window.rvuAuthListenersBound = true;
+    window.addEventListener("rvu-auth-user", (event) => {
+      if (event.detail && !state.authed) {
+        enterAuthenticatedApp(event.detail).catch((error) => {
+          window.alert(error.message || "Could not complete sign-in.");
+        });
+      }
+    });
+    window.addEventListener("rvu-auth-error", (event) => {
+      if (event.detail) window.alert(event.detail);
+    });
+    if (window.RVUFirebase?.auth?.currentUser && !state.authed) {
+      enterAuthenticatedApp(window.RVUFirebase.auth.currentUser).catch((error) => {
+        window.alert(error.message || "Could not restore session.");
+      });
+    }
+  }
+
   document.querySelectorAll("[data-route]").forEach((button) => {
     button.addEventListener("click", () => {
       state.route = button.dataset.route;
+      if (state.route !== "clubs") state.selectedClubSlug = null;
       state.createOpen = false;
       renderAtTop();
     });
   });
 
   document.querySelectorAll("[data-action]").forEach((button) => {
-    button.addEventListener("click", () => handleAction(button.dataset.action, button.dataset));
+    button.addEventListener("click", () => {
+      handleAction(button.dataset.action, button.dataset).catch((error) => {
+        window.alert(error.message || "Action failed.");
+      });
+    });
   });
 
   document.querySelectorAll("[data-filter]").forEach((field) => {
@@ -580,8 +1307,17 @@ function bindEvents() {
       }
       if (field.dataset.filter === "studentSchool") state.user.school = field.value;
       if (field.dataset.filter === "studentYear") state.user.year = field.value;
-      if (field.dataset.filter === "hostType") state.host.type = field.value;
-      if (field.dataset.filter === "hostCategory") state.host.category = field.value;
+      if (field.dataset.filter === "hostClub") {
+        const club = clubs.find((item) => item.name === field.value);
+        if (club) {
+          state.host.clubSlug = club.slug;
+          state.host.name = club.name;
+          state.host.category = club.category;
+          state.host.school = club.school;
+        }
+      }
+      if (field.dataset.filter === "hostSchool") state.host.school = field.value;
+      if (field.dataset.filter === "hostApprover") state.host.approver = field.value;
       render();
     });
   });
@@ -589,19 +1325,45 @@ function bindEvents() {
   document.querySelectorAll("[data-input]").forEach((field) => {
     field.addEventListener("input", () => {
       const key = field.dataset.input;
+      if (key === "authEmail") state.authEmail = field.value;
+      if (key === "authPassword") state.authPassword = field.value;
       if (key === "studentName") state.user.name = field.value;
       if (key === "hostName") state.host.name = field.value;
       if (key === "hostEmail") state.host.email = field.value;
+      if (key === "hostRoleTitle") state.host.roleTitle = field.value;
       if (key === "hostDescription") state.host.description = field.value;
+      if (key === "hostJoin") state.host.joinLink = field.value;
     });
   });
 
   document.querySelectorAll("[data-onboard-role]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.role = button.dataset.onboardRole;
-      if (state.role === "student") state.onboardingStep = "student-info";
-      if (state.role === "host") state.onboardingStep = "host-info";
-      if (state.role === "admin") state.onboardingStep = null;
+      const intent = button.dataset.onboardRole;
+      if (intent === "student") {
+        state.onboardingStep = "student-info";
+      }
+      if (intent === "club-core") {
+        const club = activeClub();
+        state.host.type = "Club Core";
+        state.host.name = club.name;
+        state.host.category = club.category;
+        state.host.school = club.school;
+        state.host.approver = "Current president";
+        state.host.approved = false;
+        state.adminScope = "club";
+        state.onboardingStep = "host-info";
+        state._onboardingIntent = "club-core";
+      }
+      if (intent === "school-rep") {
+        state.host.type = "School Representative";
+        state.host.name = `${state.host.school} Office`;
+        state.host.category = "School";
+        state.host.approver = "Super Admin";
+        state.host.approved = false;
+        state.adminScope = "school";
+        state.onboardingStep = "host-info";
+        state._onboardingIntent = "school-rep";
+      }
       render();
     });
   });
@@ -617,27 +1379,64 @@ function bindEvents() {
   });
 }
 
-function handleAction(action, dataset) {
-  if (action === "login") {
-    state.authed = true;
-    state.onboardingStep = "role";
+async function handleAction(action, dataset) {
+  if (action === "open-login") {
+    state.loginOpen = true;
+  }
+  if (action === "close-login") {
+    state.loginOpen = false;
+    state.authPassword = "";
+  }
+  if (action === "auth-mode") {
+    state.authMode = dataset.mode;
+  }
+  if (action === "login-google") {
+    startFirebaseLogin("google");
+    return;
+  }
+  if (action === "login-password") {
+    startFirebaseLogin("password");
+    return;
   }
   if (action === "preview") {
-    state.authed = true;
-    state.role = "student";
-    state.onboardingStep = null;
-  }
-  if (action === "switch-role") {
-    state.onboardingStep = "role";
+    window.alert("Preview mode is disabled now that Firebase auth is connected. Use RVU email sign-in.");
+    return;
   }
   if (action === "next-interests") {
     state.onboardingStep = "student-interests";
   }
   if (action === "finish-student") {
+    if (window.RVUFirebase && state.authUser) {
+      await window.RVUFirebase.saveUserProfile(state.authUser.uid, {
+        name: state.user.name,
+        school: state.user.school,
+        year: state.user.year,
+        interests: state.user.interests,
+        onboardingComplete: true,
+      });
+    }
     state.onboardingStep = null;
     state.route = "home";
   }
   if (action === "submit-host") {
+    const isClubIntent = state._onboardingIntent === "club-core";
+    const isSchoolIntent = state._onboardingIntent === "school-rep";
+    if (isClubIntent && !activeClub().id && !activeClub().slug) {
+      window.alert("No approved club exists in Firestore yet. Ask a super admin to create the club first.");
+      return;
+    }
+    if (window.RVUFirebase) {
+      await window.RVUFirebase.submitHostRequest({
+        type: isClubIntent ? "clubCore" : "schoolRepresentative",
+        clubId: isClubIntent ? state.host.clubSlug : null,
+        schoolId: isSchoolIntent ? state.host.school : null,
+        name: state.host.name,
+        roleTitle: state.host.roleTitle,
+        description: state.host.description,
+        joinLink: state.host.joinLink,
+        approver: state.host.approver,
+      });
+    }
     state.host.approved = false;
     state.onboardingStep = "host-review";
     state.route = "home";
@@ -647,17 +1446,94 @@ function handleAction(action, dataset) {
   }
   if (action === "close-onboarding") {
     state.onboardingStep = null;
+    if (isClubCore() || isSchoolRep()) state.route = "admin";
   }
   if (action === "toggle-create") {
     state.createOpen = !state.createOpen;
   }
+  if (action === "create-event") {
+    await createFirebaseEvent();
+  }
+  if (action === "create-announcement") {
+    await createFirebaseAnnouncement();
+  }
+  if (action === "open-club") {
+    state.route = "clubs";
+    state.selectedClubSlug = dataset.club;
+  }
+  if (action === "back-to-clubs") {
+    state.selectedClubSlug = null;
+  }
+  if (action === "toggle-registration") {
+    const club = clubs.find((item) => item.slug === dataset.club);
+    if (club) {
+      const nextValue = !club.registrationOpen;
+      if (window.RVUFirebase) await window.RVUFirebase.updateClubRegistration(club.id || club.slug, nextValue);
+      club.registrationOpen = nextValue;
+    }
+  }
   if (action === "approve-host") {
-    state.host.approved = true;
-    state.role = "host";
+    if (window.RVUFirebase && dataset.request) {
+      await window.RVUFirebase.updateHostRequestStatus(dataset.request, "approved");
+      await syncFirebaseData();
+    }
   }
   if (action === "reject-host") {
-    state.host.approved = false;
-    window.alert("Host request rejected. Posting remains restricted.");
+    if (window.RVUFirebase && dataset.request) {
+      await window.RVUFirebase.updateHostRequestStatus(dataset.request, "rejected");
+      await syncFirebaseData();
+    }
+  }
+  if (action === "sign-out") {
+    await handleSignOut();
+    return;
+  }
+  if (action === "admin-tab") {
+    state.adminTab = dataset.tab || "requests";
+  }
+  if (action === "admin-create-club") {
+    if (!window.RVUFirebase || !isSuperAdmin()) return;
+    const name = window.prompt("Club name");
+    if (!name) return;
+    const category = window.prompt("Category (e.g. Tech, Cultural, Sports)") || "General";
+    const school = window.prompt("School") || schools[0];
+    const tagline = window.prompt("Tagline") || "";
+    const description = window.prompt("Description") || "";
+    await window.RVUFirebase.createClub({ name, category, school, tagline, description });
+    await syncFirebaseData();
+  }
+  if (action === "admin-delete-club") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    if (!window.confirm("Delete this club? This cannot be undone.")) return;
+    await window.RVUFirebase.deleteDocument("clubs", dataset.docid);
+    await syncFirebaseData();
+  }
+  if (action === "admin-unpublish-event") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    await window.RVUFirebase.updateEventStatus(dataset.docid, "draft");
+    await syncFirebaseData();
+  }
+  if (action === "admin-publish-event") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    await window.RVUFirebase.updateEventStatus(dataset.docid, "published");
+    await syncFirebaseData();
+  }
+  if (action === "admin-unpublish-announcement") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    await window.RVUFirebase.updateAnnouncementStatus(dataset.docid, "draft");
+    await syncFirebaseData();
+  }
+  if (action === "admin-delete-event") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    if (!window.confirm("Delete this event permanently?")) return;
+    await window.RVUFirebase.deleteDocument("events", dataset.docid);
+    await syncFirebaseData();
+  }
+  if (action === "admin-delete-announcement") {
+    if (!window.RVUFirebase || !isSuperAdmin() || !dataset.docid) return;
+    if (!window.confirm("Delete this announcement permanently?")) return;
+    await window.RVUFirebase.deleteDocument("announcements", dataset.docid);
+    await syncFirebaseData();
   }
   if (action === "toast") {
     window.alert(dataset.message || "Done");
