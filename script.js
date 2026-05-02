@@ -250,6 +250,10 @@ async function enterAuthenticatedApp(user) {
   if (user.displayName) state.user.name = user.displayName;
   try {
     await syncFirebaseData();
+    if (isSuperAdmin() && !window.location.pathname.endsWith("/admin.html")) {
+      window.location.href = "./admin.html";
+      return;
+    }
   } catch (error) {
     state.dataLoading = false;
     window.alert(error.message || "Could not load Firebase data.");
