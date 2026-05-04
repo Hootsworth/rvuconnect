@@ -57,12 +57,29 @@ button {
   position: sticky;
   top: 0;
   height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--line);
   background: var(--ink);
   color: var(--paper);
   padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(246, 240, 229, 0.36) transparent;
+}
+
+.rail::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rail::-webkit-scrollbar-thumb {
+  background: rgba(246, 240, 229, 0.36);
 }
 
 .rail img {
@@ -99,6 +116,7 @@ button {
   display: grid;
   gap: 2px;
   margin: 28px 0;
+  min-height: 0;
 }
 
 .tabs button,
@@ -371,6 +389,8 @@ button {
   .rail {
     position: static;
     height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .summary,
