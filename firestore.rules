@@ -72,12 +72,44 @@ service cloud.firestore {
           .hasOnly(['name', 'school', 'year', 'interests', 'onboardingComplete', 'updatedAt']);
 
       allow update, delete: if isSuperAdmin();
+
+      match /savedItems/{savedId} {
+        allow read, create, update, delete: if isRvuEmail() && createsOwnDoc(uid);
+      }
+
+      match /followedClubs/{clubId} {
+        allow read, create, update, delete: if isRvuEmail() && createsOwnDoc(uid);
+      }
+
+      match /rsvps/{eventId} {
+        allow read, create, update, delete: if isRvuEmail() && createsOwnDoc(uid);
+      }
+
+      match /applications/{projectId} {
+        allow read, create, update, delete: if isRvuEmail() && createsOwnDoc(uid);
+        allow read, update: if isSuperAdmin();
+      }
     }
 
     match /superAdmins/{adminId} {
       allow read: if isRvuEmail()
         && (adminId == request.auth.uid || adminId == request.auth.token.email);
-      allow write: if false;
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /siteSettings/{settingId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow create, read: if isSuperAdmin();
+      allow update, delete: if false;
+    }
+
+    match /contentReviews/{reviewId} {
+      allow create: if isRvuEmail();
+      allow read, update, delete: if isSuperAdmin();
     }
 
     match /schools/{schoolId} {
@@ -165,6 +197,11 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin()
         || (resource.data.hostType == 'club' && isApprovedClubCore(resource.data.clubId))
         || (resource.data.hostType == 'school' && isApprovedSchoolRep(resource.data.schoolId));
+
+      match /rsvps/{uid} {
+        allow read: if isSuperAdmin() || createsOwnDoc(uid);
+        allow create, update, delete: if isRvuEmail() && createsOwnDoc(uid);
+      }
     }
 
     match /announcements/{announcementId} {

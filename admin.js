@@ -26,14 +26,21 @@ const state = {
     allAnnouncements: [],
     allClubs: [],
     allSchools: [],
+    auditLogs: [],
+    contentReviews: [],
+    siteSettings: [],
     projects: [],
   },
   forms: {
     club: defaultClub(),
+    clubProfile: defaultClubProfile(),
     school: defaultSchool(),
     event: defaultEvent(),
     announcement: defaultAnnouncement(),
     project: defaultProject(),
+    role: defaultRoleGrant(),
+    settings: defaultSettings(),
+    review: defaultReview(),
   },
   toast: "",
 };
@@ -58,6 +65,10 @@ function defaultClub() {
   };
 }
 
+function defaultClubProfile() {
+  return { clubId: "", logoUrl: "", bannerUrl: "", socials: "", registrationForm: "", doing: "", highlights: "" };
+}
+
 function defaultSchool() {
   return { name: "", shortName: "", description: "", leadEmail: "" };
 }
@@ -72,6 +83,24 @@ function defaultAnnouncement() {
 
 function defaultProject() {
   return { title: "", description: "", tags: "", skills: "", expiry: "" };
+}
+
+function defaultRoleGrant() {
+  return { email: "", uid: "", role: "student" };
+}
+
+function defaultSettings() {
+  return {
+    eventCategories: "Club Event, Faculty Event, School Event",
+    interestTags: "AI, Web Development, Design, Business, Finance, Marketing, Product, Film, Law, Healthcare",
+    announcementTags: "Recruitment, Notice, Update",
+    reviewRequired: false,
+    bannedWords: "",
+  };
+}
+
+function defaultReview() {
+  return { title: "", collection: "events", targetId: "", note: "" };
 }
 
 function escapeHtml(value) {
@@ -109,8 +138,21 @@ async function loadAdminData() {
     allAnnouncements: data.allAnnouncements || [],
     allClubs: data.allClubs || [],
     allSchools: data.allSchools || [],
+    auditLogs: data.auditLogs || [],
+    contentReviews: data.contentReviews || [],
+    siteSettings: data.siteSettings || [],
     projects: data.projects || [],
   };
+  const platform = state.data.siteSettings.find((item) => item.id === "platform");
+  if (platform) {
+    state.forms.settings = {
+      eventCategories: (platform.eventCategories || []).join(", "),
+      interestTags: (platform.interestTags || []).join(", "),
+      announcementTags: (platform.announcementTags || []).join(", "),
+      reviewRequired: Boolean(platform.reviewRequired),
+      bannedWords: (platform.bannedWords || []).join(", "),
+    };
+  }
 }
 
 async function enter(user) {
@@ -212,6 +254,11 @@ function renderRail() {
     ["events", "Events"],
     ["announcements", "Notices"],
     ["projects", "Projects"],
+    ["review", "Review"],
+    ["roles", "Roles"],
+    ["settings", "Settings"],
+    ["analytics", "Analytics"],
+    ["audit", "Audit"],
     ["users", "Users"],
     ["moderation", "Moderation"],
   ];
@@ -241,6 +288,11 @@ function tabTitle() {
     events: "Event Control",
     announcements: "Notice Control",
     projects: "Project Control",
+    review: "Review Queue",
+    roles: "Role Manager",
+    settings: "Site Settings",
+    analytics: "Analytics",
+    audit: "Audit Log",
     users: "User Directory",
     moderation: "Moderation",
   };
@@ -255,6 +307,7 @@ function renderSummary() {
       ${metric("Users", state.data.allUsers.length)}
       ${metric("Clubs", state.data.allClubs.length)}
       ${metric("Events", state.data.allEvents.length)}
+      ${metric("Reviews", state.data.contentReviews.filter((item) => item.status === "pending").length)}
     </section>
   `;
 }
@@ -270,6 +323,11 @@ function renderTab() {
   if (state.tab === "events") return renderEvents();
   if (state.tab === "announcements") return renderAnnouncements();
   if (state.tab === "projects") return renderProjects();
+  if (state.tab === "review") return renderReview();
+  if (state.tab === "roles") return renderRoles();
+  if (state.tab === "settings") return renderSettings();
+  if (state.tab === "analytics") return renderAnalytics();
+  if (state.tab === "audit") return renderAudit();
   if (state.tab === "users") return renderUsers();
   if (state.tab === "moderation") return renderModeration();
   return renderOverview();
@@ -287,6 +345,8 @@ function renderOverview() {
           <button class="btn secondary" data-tab="events">Create event</button>
           <button class="btn secondary" data-tab="announcements">Create notice</button>
           <button class="btn secondary" data-tab="projects">Create project</button>
+          <button class="btn secondary" data-tab="roles">Grant role</button>
+          <button class="btn secondary" data-tab="settings">Site settings</button>
         </div>
       </article>
       <article class="panel">
@@ -338,10 +398,33 @@ function renderClubs() {
         ${renderClubForm()}
       </article>
       <article class="panel wide">
+        <p class="eyebrow">Profile editor</p>
+        <h3>Club profile assets and links</h3>
+        ${renderClubProfileForm()}
+      </article>
+      <article class="panel wide">
         <p class="eyebrow">Registry</p>
         <h3>All clubs</h3>
         ${listRows(state.data.allClubs, clubRow, "No clubs created yet.")}
       </article>
+    </div>
+  `;
+}
+
+function renderClubProfileForm() {
+  const profile = state.forms.clubProfile;
+  return `
+    <div class="form">
+      <div class="form-grid">
+        ${select("clubProfile.clubId", "Club", state.data.allClubs.map((club) => club.id), profile.clubId)}
+        ${input("clubProfile.logoUrl", "Logo URL", profile.logoUrl)}
+        ${input("clubProfile.bannerUrl", "Banner URL", profile.bannerUrl)}
+        ${input("clubProfile.registrationForm", "Registration form link", profile.registrationForm)}
+        ${input("clubProfile.socials", "Social links comma separated", profile.socials)}
+      </div>
+      ${textarea("clubProfile.doing", "What they are doing now", profile.doing)}
+      ${textarea("clubProfile.highlights", "Past highlights comma separated", profile.highlights)}
+      <button class="btn gold" data-action="update-club-profile">Save club profile</button>
     </div>
   `;
 }
@@ -514,6 +597,7 @@ function renderProjects() {
 
 function projectRow(project) {
   return row(project.title, `${(project.tags || []).join(", ") || "No tags"} · ${project.status || "open"}`, `
+    <button class="mini-btn" data-action="project-application-status" data-id="${project.id}">Application status</button>
     <button class="mini-btn danger" data-action="delete-project" data-id="${project.id}">Delete</button>
   `);
 }
@@ -524,6 +608,106 @@ function renderUsers() {
       <p class="eyebrow">Directory</p>
       <h3>Users</h3>
       ${listRows(state.data.allUsers, (user) => simpleRow(user.name || user.email || user.id, `${user.email || "No email"} · ${user.role || "student"} · ${user.school || "No school"}`), "No users yet.")}
+    </article>
+  `;
+}
+
+function renderReview() {
+  return `
+    <div class="grid">
+      <article class="panel">
+        <p class="eyebrow">Manual review</p>
+        <h3>Add review item</h3>
+        <div class="form">
+          ${input("review.title", "Title", state.forms.review.title)}
+          ${select("review.collection", "Collection", ["events", "announcements", "projects", "clubs"], state.forms.review.collection)}
+          ${input("review.targetId", "Target document ID", state.forms.review.targetId)}
+          ${textarea("review.note", "Review note", state.forms.review.note)}
+          <button class="btn gold" data-action="create-review">Add to queue</button>
+        </div>
+      </article>
+      <article class="panel">
+        <p class="eyebrow">Queue</p>
+        <h3>Pending reviews</h3>
+        ${listRows(state.data.contentReviews, reviewRow, "No content reviews yet.")}
+      </article>
+    </div>
+  `;
+}
+
+function reviewRow(item) {
+  return row(item.title || item.targetId, `${item.collection || "content"} · ${item.status || "pending"} · ${item.note || ""}`, `
+    <button class="mini-btn" data-action="approve-review" data-id="${item.id}">Approve</button>
+    <button class="mini-btn danger" data-action="reject-review" data-id="${item.id}">Reject</button>
+  `);
+}
+
+function renderRoles() {
+  const grant = state.forms.role;
+  return `
+    <div class="grid">
+      <article class="panel">
+        <p class="eyebrow">Role manager</p>
+        <h3>Grant platform role</h3>
+        <div class="form">
+          ${input("role.email", "RVU email", grant.email, "email", "name@rvu.edu.in")}
+          ${input("role.uid", "Firebase Auth UID", grant.uid)}
+          ${select("role.role", "Role", ["student", "clubCore", "schoolRepresentative", "superAdmin"], grant.role)}
+          <button class="btn gold" data-action="grant-role">Apply role</button>
+        </div>
+      </article>
+      <article class="panel">
+        <p class="eyebrow">Current users</p>
+        <h3>Directory</h3>
+        ${listRows(state.data.allUsers.slice(0, 12), (user) => simpleRow(user.name || user.email || user.id, `${user.email || "No email"} · ${user.role || "student"}`), "No users yet.")}
+      </article>
+    </div>
+  `;
+}
+
+function renderSettings() {
+  const settings = state.forms.settings;
+  return `
+    <article class="panel wide">
+      <p class="eyebrow">Site settings</p>
+      <h3>Taxonomy and review controls</h3>
+      <div class="form">
+        ${textarea("settings.eventCategories", "Event categories", settings.eventCategories)}
+        ${textarea("settings.interestTags", "Interest tags", settings.interestTags)}
+        ${textarea("settings.announcementTags", "Announcement tags", settings.announcementTags)}
+        ${textarea("settings.bannedWords", "Banned words", settings.bannedWords)}
+        <label class="check"><input type="checkbox" data-check="settings.reviewRequired" ${settings.reviewRequired ? "checked" : ""} /> Require content review before publishing</label>
+        <button class="btn gold" data-action="save-settings">Save settings</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderAnalytics() {
+  const openProjects = state.data.projects.filter((item) => item.status !== "closed").length;
+  const publishedEvents = state.data.allEvents.filter((item) => item.status === "published").length;
+  const publishedNotices = state.data.allAnnouncements.filter((item) => item.status === "published").length;
+  const openFlags = state.data.moderationFlags.filter((item) => item.status !== "closed").length;
+  return `
+    <div class="grid">
+      ${analyticsCard("Published events", publishedEvents, "Live campus programming")}
+      ${analyticsCard("Published notices", publishedNotices, "Visible structured updates")}
+      ${analyticsCard("Open projects", openProjects, "Collaboration posts")}
+      ${analyticsCard("Open flags", openFlags, "Moderation workload")}
+    </div>
+  `;
+}
+
+function analyticsCard(title, value, copy) {
+  return `<article class="panel"><p class="eyebrow">${title}</p><h3>${value}</h3><p class="empty">${copy}</p></article>`;
+}
+
+function renderAudit() {
+  return `
+    <article class="panel wide">
+      <p class="eyebrow">Immutable activity</p>
+      <h3>Audit log</h3>
+      ${listRows(state.data.auditLogs.slice().reverse().slice(0, 80), (item) => simpleRow(item.action || "Action", `${item.collection || "collection"} · ${item.title || item.targetId || ""} · ${item.adminEmail || ""}`), "No audit entries yet.")}
     </article>
   `;
 }
@@ -645,6 +829,24 @@ async function handleAction(action, id) {
     showToast("Club created.");
     return;
   }
+  if (action === "update-club-profile") {
+    const profile = state.forms.clubProfile;
+    if (!profile.clubId) return window.alert("Choose a club first.");
+    await window.RVUFirebase.updateClubProfile(profile.clubId, {
+      logoUrl: profile.logoUrl.trim(),
+      bannerUrl: profile.bannerUrl.trim(),
+      registrationForm: profile.registrationForm.trim(),
+      socials: profile.socials.split(",").map((item) => item.trim()).filter(Boolean),
+      doing: profile.doing.trim(),
+      highlights: profile.highlights.split(",").map((item) => item.trim()).filter(Boolean),
+      joinLink: profile.registrationForm.trim(),
+      registrationOpen: Boolean(profile.registrationForm.trim()),
+    });
+    state.forms.clubProfile = defaultClubProfile();
+    await refresh();
+    showToast("Club profile updated.");
+    return;
+  }
   if (action === "reset-club") {
     state.forms.club = defaultClub();
     render();
@@ -710,6 +912,44 @@ async function handleAction(action, id) {
     showToast("School created.");
     return;
   }
+  if (action === "grant-role") {
+    const grant = state.forms.role;
+    if (!grant.email && !grant.uid) return window.alert("Email or UID is required.");
+    if (grant.email && !isRvuEmail(grant.email)) return window.alert("Email must end with @rvu.edu.in.");
+    await window.RVUFirebase.grantPlatformRole(grant);
+    state.forms.role = defaultRoleGrant();
+    await refresh();
+    showToast("Role updated.");
+    return;
+  }
+  if (action === "save-settings") {
+    const settings = state.forms.settings;
+    await window.RVUFirebase.updateSiteSetting("platform", {
+      eventCategories: settings.eventCategories.split(",").map((item) => item.trim()).filter(Boolean),
+      interestTags: settings.interestTags.split(",").map((item) => item.trim()).filter(Boolean),
+      announcementTags: settings.announcementTags.split(",").map((item) => item.trim()).filter(Boolean),
+      bannedWords: settings.bannedWords.split(",").map((item) => item.trim()).filter(Boolean),
+      reviewRequired: Boolean(settings.reviewRequired),
+    });
+    await refresh();
+    showToast("Settings saved.");
+    return;
+  }
+  if (action === "create-review") {
+    const review = state.forms.review;
+    if (!review.title.trim()) return window.alert("Review title is required.");
+    await window.RVUFirebase.createContentReview(review);
+    state.forms.review = defaultReview();
+    await refresh();
+    showToast("Review item added.");
+    return;
+  }
+  if (action === "approve-review" || action === "reject-review") {
+    await window.RVUFirebase.updateContentReviewStatus(id, action === "approve-review" ? "approved" : "rejected");
+    await refresh();
+    showToast("Review updated.");
+    return;
+  }
   if (action === "create-event") {
     const event = state.forms.event;
     if (!event.title.trim()) return window.alert("Event title is required.");
@@ -753,6 +993,15 @@ async function handleAction(action, id) {
     state.forms.project = defaultProject();
     await refresh();
     showToast("Project created.");
+    return;
+  }
+  if (action === "project-application-status") {
+    const userId = window.prompt("Applicant Firebase UID");
+    if (!userId) return;
+    const status = window.prompt("Status: pending, accepted, rejected", "accepted") || "accepted";
+    await window.RVUFirebase.updateProjectApplicationStatus(id, userId, status);
+    await refresh();
+    showToast("Project application updated.");
   }
 }
 

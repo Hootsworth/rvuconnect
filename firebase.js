@@ -131,11 +131,12 @@ async function saveUserProfile(uid, data) {
 }
 
 async function loadCampusData({ superAdmin = false } = {}) {
-  const [clubsRows, eventRows, announcementRows, projectRows] = await Promise.all([
+  const [clubsRows, eventRows, announcementRows, projectRows, settingsRows] = await Promise.all([
     rowsOrEmpty("approved clubs", getDocs(query(collection(db, "clubs"), where("status", "==", "approved")))),
     rowsOrEmpty("published events", getDocs(query(collection(db, "events"), where("status", "==", "published")))),
     rowsOrEmpty("published announcements", getDocs(query(collection(db, "announcements"), where("status", "==", "published")))),
     rowsOrEmpty("projects", getDocs(collection(db, "projects"))),
+    rowsOrEmpty("site settings", getDocs(collection(db, "siteSettings"))),
   ]);
 
   const data = {
@@ -150,20 +151,38 @@ async function loadCampusData({ superAdmin = false } = {}) {
     allAnnouncements: [],
     allClubs: [],
     allSchools: [],
+    auditLogs: [],
+    contentReviews: [],
+    savedItems: [],
+    followedClubs: [],
+    rsvps: [],
+    myApplications: [],
+    siteSettings: settingsRows,
     clubAccess: null,
   };
 
   if (auth.currentUser?.email) {
     const email = auth.currentUser.email;
-    const memberDocs = await Promise.all(data.clubs.map(async (club) => {
+    const uid = auth.currentUser.uid;
+    const [memberDocs, savedRows, followRows, rsvpRows, applicationRows] = await Promise.all([
+      Promise.all(data.clubs.map(async (club) => {
       const memberSnap = await getDoc(doc(db, "clubs", club.id, "coreMembers", email));
       return memberSnap.exists() ? { club, member: { id: memberSnap.id, ...memberSnap.data() } } : null;
-    }));
+      })),
+      rowsOrEmpty("saved items", getDocs(collection(db, "users", uid, "savedItems"))),
+      rowsOrEmpty("followed clubs", getDocs(collection(db, "users", uid, "followedClubs"))),
+      rowsOrEmpty("event RSVPs", getDocs(collection(db, "users", uid, "rsvps"))),
+      rowsOrEmpty("project applications", getDocs(collection(db, "users", uid, "applications"))),
+    ]);
     data.clubAccess = memberDocs.find((entry) => entry?.member?.status === "approved") || null;
+    data.savedItems = savedRows;
+    data.followedClubs = followRows;
+    data.rsvps = rsvpRows;
+    data.myApplications = applicationRows;
   }
 
   if (superAdmin) {
-    const [requestsRows, flagsRows, userRows, allEventRows, allAnnouncementRows, allClubRows, allSchoolRows] = await Promise.all([
+    const [requestsRows, flagsRows, userRows, allEventRows, allAnnouncementRows, allClubRows, allSchoolRows, auditRows, reviewRows] = await Promise.all([
       rowsOrEmpty("host requests", getDocs(collection(db, "hostRequests"))),
       rowsOrEmpty("moderation flags", getDocs(collection(db, "moderationFlags"))),
       rowsOrEmpty("users", getDocs(collection(db, "users"))),
@@ -171,6 +190,8 @@ async function loadCampusData({ superAdmin = false } = {}) {
       rowsOrEmpty("all announcements", getDocs(collection(db, "announcements"))),
       rowsOrEmpty("all clubs", getDocs(collection(db, "clubs"))),
       rowsOrEmpty("all schools", getDocs(collection(db, "schools"))),
+      rowsOrEmpty("audit logs", getDocs(collection(db, "auditLogs"))),
+      rowsOrEmpty("content reviews", getDocs(collection(db, "contentReviews"))),
     ]);
     data.hostRequests = requestsRows;
     data.moderationFlags = flagsRows;
@@ -179,6 +200,8 @@ async function loadCampusData({ superAdmin = false } = {}) {
     data.allAnnouncements = allAnnouncementRows;
     data.allClubs = allClubRows;
     data.allSchools = allSchoolRows;
+    data.auditLogs = auditRows;
+    data.contentReviews = reviewRows;
   }
 
   return data;
@@ -286,6 +309,7 @@ async function createEvent(payload) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  await logAudit("create-event", "events", ref.id, payload.title);
   return ref.id;
 }
 
@@ -297,6 +321,7 @@ async function createAnnouncement(payload) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  await logAudit("create-announcement", "announcements", ref.id, payload.title);
   return ref.id;
 }
 
@@ -309,6 +334,7 @@ async function createProject(payload) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  await logAudit("create-project", "projects", ref.id, payload.title);
   return ref.id;
 }
 
@@ -354,6 +380,7 @@ async function createClub(payload) {
     updatedAt: serverTimestamp(),
   })));
 
+  await logAudit("create-club", "clubs", ref.id, payload.name);
   return ref.id;
 }
 
@@ -365,7 +392,40 @@ async function createSchool(payload) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  await logAudit("create-school", "schools", ref.id, payload.name);
   return ref.id;
+}
+
+async function logAudit(action, collectionName, targetId, title = "") {
+  if (!auth.currentUser) return;
+  await addDoc(collection(db, "auditLogs"), {
+    action,
+    collection: collectionName,
+    targetId,
+    title,
+    adminEmail: auth.currentUser.email,
+    adminId: auth.currentUser.uid,
+    createdAt: serverTimestamp(),
+  }).catch(() => null);
+}
+
+async function grantPlatformRole({ email, uid, role }) {
+  const normalizedEmail = email?.trim();
+  if (role === "superAdmin") {
+    const docId = uid?.trim() || normalizedEmail;
+    await setDoc(doc(db, "superAdmins", docId), {
+      email: normalizedEmail || "",
+      uid: uid || "",
+      role: "superAdmin",
+      grantedBy: auth.currentUser?.uid,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    await logAudit("grant-super-admin", "superAdmins", docId, normalizedEmail);
+    return;
+  }
+  if (!uid) throw new Error("A Firebase Auth UID is required for user role updates.");
+  await updateUserRole(uid, role || "student");
+  await logAudit("update-user-role", "users", uid, role);
 }
 
 async function assignClubCoreRole(clubId, { email, name, role }) {
@@ -411,8 +471,17 @@ async function updateClub(clubId, data) {
   });
 }
 
+async function updateClubProfile(clubId, data) {
+  await updateDoc(doc(db, "clubs", clubId), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+  await logAudit("update-club-profile", "clubs", clubId, data.name || "");
+}
+
 async function deleteDocument(collectionName, docId) {
   await firestoreDeleteDoc(doc(db, collectionName, docId));
+  await logAudit("delete-document", collectionName, docId);
 }
 
 async function updateEventStatus(eventId, status) {
@@ -429,31 +498,162 @@ async function updateAnnouncementStatus(announcementId, status) {
   });
 }
 
+async function updateSiteSetting(settingId, data) {
+  await setDoc(doc(db, "siteSettings", settingId), {
+    ...data,
+    updatedBy: auth.currentUser?.uid,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+  await logAudit("update-site-setting", "siteSettings", settingId);
+}
+
+async function createContentReview(payload) {
+  const ref = await addDoc(collection(db, "contentReviews"), {
+    ...payload,
+    status: payload.status || "pending",
+    createdBy: auth.currentUser?.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  await logAudit("create-content-review", "contentReviews", ref.id, payload.title);
+  return ref.id;
+}
+
+async function updateContentReviewStatus(reviewId, status) {
+  await updateDoc(doc(db, "contentReviews", reviewId), {
+    status,
+    reviewedBy: auth.currentUser?.uid,
+    reviewedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  await logAudit("review-content", "contentReviews", reviewId, status);
+}
+
+async function saveItem({ itemId, type, title }) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  await setDoc(doc(db, "users", user.uid, "savedItems", `${type}_${itemId}`), {
+    itemId,
+    type,
+    title: title || "",
+    createdAt: serverTimestamp(),
+  });
+}
+
+async function followClub(clubId, clubName) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  await setDoc(doc(db, "users", user.uid, "followedClubs", clubId), {
+    clubId,
+    clubName: clubName || "",
+    createdAt: serverTimestamp(),
+  });
+}
+
+async function rsvpEvent(eventId, payload = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  await setDoc(doc(db, "events", eventId, "rsvps", user.uid), {
+    userId: user.uid,
+    email: user.email,
+    status: payload.status || "going",
+    checkedIn: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+  await setDoc(doc(db, "users", user.uid, "rsvps", eventId), {
+    eventId,
+    title: payload.title || "",
+    status: payload.status || "going",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+async function applyToProject(projectId, payload = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  const application = {
+    userId: user.uid,
+    email: user.email,
+    name: payload.name || user.displayName || user.email,
+    note: payload.note || "",
+    status: "pending",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  await setDoc(doc(db, "projects", projectId, "applications", user.uid), application);
+  await setDoc(doc(db, "users", user.uid, "applications", projectId), {
+    projectId,
+    title: payload.title || "",
+    status: "pending",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function updateProjectApplicationStatus(projectId, userId, status) {
+  await updateDoc(doc(db, "projects", projectId, "applications", userId), {
+    status,
+    updatedAt: serverTimestamp(),
+  });
+  await updateDoc(doc(db, "users", userId, "applications", projectId), {
+    status,
+    updatedAt: serverTimestamp(),
+  }).catch(() => null);
+  await logAudit("project-application-status", "projects", projectId, status);
+}
+
+async function flagContent(payload) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  const ref = await addDoc(collection(db, "moderationFlags"), {
+    ...payload,
+    status: "open",
+    userId: user.uid,
+    email: user.email,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
 window.RVUFirebase = {
   app,
   auth,
   db,
   analytics,
   assignClubCoreRole,
+  applyToProject,
   createEmailPasswordAccount,
   createAnnouncement,
   createClub,
+  createContentReview,
   createEvent,
   createProject,
   createSchool,
   deleteDocument,
   ensureUserProfile,
+  flagContent,
+  followClub,
+  grantPlatformRole,
   isRvuEmail,
   loadCampusData,
+  rsvpEvent,
   saveUserProfile,
+  saveItem,
   signInWithEmailPassword,
   submitHostRequest,
   updateAnnouncementStatus,
   updateClub,
   updateClubLeadership,
+  updateClubProfile,
+  updateContentReviewStatus,
   updateClubRegistration,
   updateEventStatus,
   updateHostRequestStatus,
+  updateProjectApplicationStatus,
+  updateSiteSetting,
   updateUserRole,
   removeClubCoreRole,
   signInWithGoogle,

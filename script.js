@@ -94,6 +94,11 @@ const state = {
   allAnnouncements: [],
   allClubs: [],
   allSchools: [],
+  savedItems: [],
+  followedClubs: [],
+  rsvps: [],
+  myApplications: [],
+  siteSettings: [],
 };
 
 const app = document.querySelector("#app");
@@ -215,6 +220,11 @@ async function syncFirebaseData() {
   state.allAnnouncements = data.allAnnouncements || [];
   state.allClubs = data.allClubs || [];
   state.allSchools = data.allSchools || [];
+  state.savedItems = data.savedItems || [];
+  state.followedClubs = data.followedClubs || [];
+  state.rsvps = data.rsvps || [];
+  state.myApplications = data.myApplications || [];
+  state.siteSettings = data.siteSettings || [];
   if (profile.role !== "superAdmin" && data.clubAccess) {
     state.role = "club-core";
     state.host.clubSlug = data.clubAccess.club.id;
@@ -611,6 +621,15 @@ function renderHome() {
             ${quickCard("clubs", "Clubs", "Find approved hosts", "clubs")}
             ${quickCard("projects", "Projects", "Join student teams", "projects")}
             ${quickCard("announcements", "Announcements", "Read structured updates", "announce")}
+          </div>
+        </section>
+        <section class="section">
+          <div class="section-title"><h2>My Campus</h2><span>Saved and applied</span></div>
+          <div class="updates">
+            ${state.followedClubs.slice(0, 2).map((item) => `<article class="update-item"><h3>${escapeHtml(item.clubName || "Followed club")}</h3><p>Club followed for personalized updates.</p></article>`).join("")}
+            ${state.rsvps.slice(0, 2).map((item) => `<article class="update-item"><h3>${escapeHtml(item.title || "RSVP")}</h3><p>${escapeHtml(item.status || "going")} RSVP stored.</p></article>`).join("")}
+            ${state.myApplications.slice(0, 2).map((item) => `<article class="update-item"><h3>${escapeHtml(item.title || "Project application")}</h3><p>Status: ${escapeHtml(item.status || "pending")}</p></article>`).join("")}
+            ${!state.followedClubs.length && !state.rsvps.length && !state.myApplications.length ? renderEmptyState("No personal activity yet", "Follow clubs, RSVP to events, save content, or apply to projects.") : ""}
           </div>
         </section>
       </aside>
@@ -1245,6 +1264,12 @@ function renderEventCard(event) {
         <h3>${escapeHtml(event.title)}</h3>
         <p>${escapeHtml(event.description || "")}</p>
         <div class="chip-grid">${tags.map((tag) => `<span class="tag gold">${escapeHtml(tag)}</span>`).join("")}<span class="tag">${escapeHtml(event.host || "RVU")}</span></div>
+        <div class="project-actions">
+          <button class="btn gold" data-action="rsvp-event" data-docid="${event.id}" data-title="${escapeHtml(event.title)}">RSVP</button>
+          <button class="btn secondary" data-action="save-item" data-kind="event" data-docid="${event.id}" data-title="${escapeHtml(event.title)}">Save</button>
+          <button class="btn secondary" data-action="calendar-event" data-docid="${event.id}">Calendar</button>
+          <button class="btn secondary" data-action="flag-content" data-kind="events" data-docid="${event.id}" data-title="${escapeHtml(event.title)}">Report</button>
+        </div>
       </div>
     </article>
   `;
@@ -1261,6 +1286,10 @@ function renderUpdate(item) {
       <div class="meta"><span class="tag gold">${escapeHtml(item.tag || "Update")}</span><span>${escapeHtml(item.source || "RVU")}</span><span>${escapeHtml(item.time || "")}</span></div>
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.description || "")}</p>
+      <div class="project-actions">
+        <button class="btn secondary" data-action="save-item" data-kind="announcement" data-docid="${item.id}" data-title="${escapeHtml(item.title)}">Save</button>
+        <button class="btn secondary" data-action="flag-content" data-kind="announcements" data-docid="${item.id}" data-title="${escapeHtml(item.title)}">Report</button>
+      </div>
     </article>
   `;
 }
@@ -1279,7 +1308,10 @@ function renderClubCard(club) {
       </div>
       <p>${escapeHtml(club.tagline || club.description || "")}</p>
       <div class="meta"><span>${escapeHtml(club.school || "RVU")}</span><span>${clubEvents} events</span><span>${club.registrationOpen ? "Open" : "Closed"}</span></div>
-      <button class="btn secondary" data-action="open-club" data-club="${club.slug || club.id}">View club</button>
+      <div class="project-actions">
+        <button class="btn secondary" data-action="open-club" data-club="${club.slug || club.id}">View club</button>
+        <button class="btn gold" data-action="follow-club" data-docid="${club.id || club.slug}" data-title="${escapeHtml(club.name)}">Follow</button>
+      </div>
     </article>
   `;
 }
@@ -1289,15 +1321,16 @@ function renderProjectCard(project) {
   const skills = project.skills || [];
   return `
     <article class="card project-card">
-      <div class="project-rail"><button data-action="toast" data-message="Bookmark saved">${icon("bookmark")}</button><span>${project.score || 0}</span></div>
+      <div class="project-rail"><button data-action="save-item" data-kind="project" data-docid="${project.id}" data-title="${escapeHtml(project.title)}">${icon("bookmark")}</button><span>${project.score || 0}</span></div>
       <div class="card-body">
         <div class="meta"><span class="status ${status.toLowerCase()}">${escapeHtml(status)}</span><span>Expires ${escapeHtml(project.expiry || "TBA")}</span></div>
         <h3>${escapeHtml(project.title)}</h3>
         <p>${escapeHtml(project.description || "")}</p>
         <div class="chip-grid">${skills.map((skill) => `<span class="tag">${escapeHtml(skill)}</span>`).join("")}</div>
         <div class="project-actions">
-          <button class="btn gold" data-action="toast" data-message="Application stored.">Apply</button>
-          <button class="btn secondary" data-action="toast" data-message="Project bookmarked.">Save</button>
+          <button class="btn gold" data-action="apply-project" data-docid="${project.id}" data-title="${escapeHtml(project.title)}">Apply</button>
+          <button class="btn secondary" data-action="save-item" data-kind="project" data-docid="${project.id}" data-title="${escapeHtml(project.title)}">Save</button>
+          <button class="btn secondary" data-action="flag-content" data-kind="projects" data-docid="${project.id}" data-title="${escapeHtml(project.title)}">Report</button>
         </div>
       </div>
     </article>
@@ -1964,6 +1997,59 @@ async function handleAction(action, dataset) {
     if (!window.confirm("Delete this project permanently?")) return;
     await window.RVUFirebase.deleteDocument("projects", dataset.docid);
     await syncFirebaseData();
+  }
+  if (action === "save-item") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    await window.RVUFirebase.saveItem({
+      itemId: dataset.docid,
+      type: dataset.kind || "item",
+      title: dataset.title || "",
+    });
+    await syncFirebaseData();
+    window.alert("Saved to your campus dashboard.");
+  }
+  if (action === "follow-club") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    await window.RVUFirebase.followClub(dataset.docid, dataset.title || "");
+    await syncFirebaseData();
+    window.alert("Club followed.");
+  }
+  if (action === "rsvp-event") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    await window.RVUFirebase.rsvpEvent(dataset.docid, { title: dataset.title || "", status: "going" });
+    await syncFirebaseData();
+    window.alert("RSVP saved.");
+  }
+  if (action === "apply-project") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    const note = window.prompt("Short application note optional") || "";
+    await window.RVUFirebase.applyToProject(dataset.docid, {
+      title: dataset.title || "",
+      name: state.user.name || state.authUser?.displayName || "",
+      note,
+    });
+    await syncFirebaseData();
+    window.alert("Application submitted.");
+  }
+  if (action === "flag-content") {
+    if (!window.RVUFirebase || !dataset.docid) return;
+    const reason = window.prompt("Why are you reporting this?");
+    if (!reason) return;
+    await window.RVUFirebase.flagContent({
+      collection: dataset.kind || "content",
+      targetId: dataset.docid,
+      title: dataset.title || "",
+      reason,
+    });
+    window.alert("Report sent to Super Admin.");
+  }
+  if (action === "calendar-event") {
+    const event = events.find((item) => item.id === dataset.docid);
+    if (!event) return;
+    const details = encodeURIComponent(event.description || "");
+    const text = encodeURIComponent(event.title || "RVU Event");
+    const location = encodeURIComponent(event.location || "RV University");
+    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}`, "_blank", "noopener");
   }
   if (action === "toast") {
     window.alert(dataset.message || "Done");
